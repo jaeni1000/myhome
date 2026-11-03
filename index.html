@@ -1038,20 +1038,44 @@
         }
       }
 
+      let moveX = 0;
+      let moveY = 0;
       let actuallyMoved = false;
+
       if (dx !== 0 || dy !== 0) {
+        // 원래 입력 방향으로 먼저 시선 고정 (벽에 부딪혀 멈춰도 누른 방향을 똑바로 봄)
+        if (Math.abs(dx) > Math.abs(dy)) {
+          player.direction = dx > 0 ? 'left' : 'right';
+        } else {
+          player.direction = dy > 0 ? 'up' : 'down';
+        }
+
         if (!checkCollision(player.x + dx, player.y + dy, player.radius)) {
           player.x += dx;
           player.y += dy;
+          moveX = dx;
+          moveY = dy;
           actuallyMoved = true;
         } else {
+          // 벽에 부딪혔을 때 미끄러지는 축(슬라이딩) 이동 처리
           if (!checkCollision(player.x + dx, player.y, player.radius)) {
             player.x += dx;
+            moveX = dx;
             actuallyMoved = true;
           }
           if (!checkCollision(player.x, player.y + dy, player.radius)) {
             player.y += dy;
+            moveY = dy;
             actuallyMoved = true;
+          }
+
+          // 벽을 타고 대각선으로 미끄러질 때만 미끄러지는 방향을 자연스럽게 봄
+          if (actuallyMoved) {
+            if (moveX !== 0 && moveY === 0) {
+              player.direction = moveX > 0 ? 'left' : 'right';
+            } else if (moveY !== 0 && moveX === 0) {
+              player.direction = moveY > 0 ? 'up' : 'down';
+            }
           }
         }
       }
@@ -1059,11 +1083,6 @@
       if (actuallyMoved) {
         player.moving = true;
         player.stepCycle += 0.22;
-        if (Math.abs(dx) > Math.abs(dy)) {
-          player.direction = dx > 0 ? 'left' : 'right';
-        } else {
-          player.direction = dy > 0 ? 'up' : 'down';
-        }
 
         if (Math.random() < 0.2) {
           particles.push({
