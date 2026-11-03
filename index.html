@@ -808,8 +808,9 @@
     }, { passive: true });
 
     window.addEventListener('keydown', (e) => {
-      keys[e.key.toLowerCase()] = true;
-      if (e.key === ' ' || e.key.toLowerCase() === 'e') {
+      if (e.code) keys[e.code.toLowerCase()] = true;
+      if (e.key) keys[e.key.toLowerCase()] = true;
+      if (e.code === 'Space' || e.code === 'KeyE' || e.key === ' ' || e.key.toLowerCase() === 'e') {
         if (activeInteractive) {
           activeInteractive.action();
           e.preventDefault();
@@ -818,7 +819,8 @@
     });
 
     window.addEventListener('keyup', (e) => {
-      keys[e.key.toLowerCase()] = false;
+      if (e.code) keys[e.code.toLowerCase()] = false;
+      if (e.key) keys[e.key.toLowerCase()] = false;
     });
 
     // ================= COLLISION DETECTION =================
