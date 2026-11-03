@@ -873,10 +873,10 @@
       let dx = 0;
       let dy = 0;
 
-      const up = keys['w'] || keys['arrowup'];
-      const down = keys['s'] || keys['arrowdown'];
-      const left = keys['a'] || keys['arrowleft'];
-      const right = keys['d'] || keys['arrowright'];
+      const up = keys['keyw'] || keys['w'] || keys['ㅈ'] || keys['arrowup'];
+      const down = keys['keys'] || keys['s'] || keys['ㄴ'] || keys['arrowdown'];
+      const left = keys['keya'] || keys['a'] || keys['ㅁ'] || keys['arrowleft'];
+      const right = keys['keyd'] || keys['d'] || keys['ㅇ'] || keys['arrowright'];
 
       if (up || down || left || right) {
         if (up) dy -= 1;
