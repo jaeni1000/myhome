@@ -1060,9 +1060,9 @@
         player.moving = true;
         player.stepCycle += 0.22;
         if (Math.abs(dx) > Math.abs(dy)) {
-          player.direction = dx > 0 ? 'right' : 'left';
+          player.direction = dx > 0 ? 'left' : 'right';
         } else {
-          player.direction = dy > 0 ? 'down' : 'up';
+          player.direction = dy > 0 ? 'up' : 'down';
         }
 
         if (Math.random() < 0.2) {
