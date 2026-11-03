@@ -939,13 +939,19 @@
     }, { passive: true });
 
     window.addEventListener('keydown', (e) => {
+      keys[e.code.toLowerCase()] = true;
       keys[e.key.toLowerCase()] = true;
-      if (e.key === ' ' || e.key.toLowerCase() === 'e') {
+      if (e.code === 'Space' || e.code === 'KeyE' || e.key === ' ' || e.key.toLowerCase() === 'e') {
         if (activeInteractive) {
           activeInteractive.action();
           e.preventDefault();
         }
       }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      keys[e.code.toLowerCase()] = false;
+      keys[e.key.toLowerCase()] = false;
     });
 
     window.addEventListener('keyup', (e) => {
@@ -1000,10 +1006,10 @@
       let dx = 0;
       let dy = 0;
 
-      const up = keys['w'] || keys['arrowup'];
-      const down = keys['s'] || keys['arrowdown'];
-      const left = keys['a'] || keys['arrowleft'];
-      const right = keys['d'] || keys['arrowright'];
+      const up = keys['keyw'] || keys['w'] || keys['ㅈ'] || keys['arrowup'];
+      const down = keys['keys'] || keys['s'] || keys['ㄴ'] || keys['arrowdown'];
+      const left = keys['keya'] || keys['a'] || keys['ㅁ'] || keys['arrowleft'];
+      const right = keys['keyd'] || keys['d'] || keys['ㅇ'] || keys['arrowright'];
 
       if (up || down || left || right) {
         if (up) dy -= 1;
