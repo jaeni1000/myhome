@@ -73,7 +73,7 @@
       </div>
       <div>
         <h1 class="text-sm font-bold tracking-tight text-white flex items-center gap-2">
-          <span id="mapTitle">재헌의 코지 스튜디오</span>
+          <span id="mapTitle">민서의 코지 스튜디오</span>
           <span id="zoneBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 font-medium">
             거실 라운지
           </span>
@@ -84,12 +84,6 @@
 
     <!-- Quick Tool Controls -->
     <div class="pointer-events-auto flex items-center gap-2">
-      <!-- Profile Customization Button -->
-      <button id="profileEditBtn" onclick="openProfileModal(false)" class="glass-panel px-3.5 py-2 rounded-xl text-xs font-semibold text-amber-300 hover:bg-white/10 transition flex items-center gap-1.5 shadow-md">
-        <i class="fa-solid fa-user-pen text-amber-400"></i>
-        <span class="hidden sm:inline">프로필 수정</span>
-      </button>
-
       <!-- Door Transition Shortcut Button -->
       <button id="doorQuickBtn" onclick="toggleMapScene()" class="glass-panel px-3.5 py-2 rounded-xl text-xs font-semibold text-sky-300 hover:bg-white/10 transition flex items-center gap-1.5 shadow-md">
         <i id="doorQuickIcon" class="fa-solid fa-door-open text-amber-400"></i>
@@ -149,51 +143,6 @@
 
   <!-- ================= MODALS & DIALOGS ================= -->
 
-  <!-- Modal: Character Creation / Profile Onboarding -->
-  <div id="modalProfile" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md hidden">
-    <div class="glass-panel w-full max-w-md rounded-3xl p-6 sm:p-8 shadow-2xl relative border border-white/20 text-center">
-      <button id="profileCloseBtn" onclick="closeModal('modalProfile')" class="absolute top-5 right-5 text-slate-400 hover:text-white text-lg p-2 hidden">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-
-      <div class="w-16 h-16 mx-auto rounded-3xl bg-amber-500/20 text-amber-300 flex items-center justify-center text-3xl mb-3 shadow-inner">
-        <span id="profileAvatarIcon">👦</span>
-      </div>
-      <h3 class="text-xl font-bold text-white mb-1">캐릭터 프로필 설정</h3>
-      <p class="text-xs text-slate-400 mb-6">이름과 성별을 선택해 나만의 아지트를 시작하세요</p>
-
-      <div class="space-y-4 text-left mb-6">
-        <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1.5">이름 (닉네임)</label>
-          <input type="text" id="profileNameInput" maxlength="10" placeholder="이름을 입력해주세요 (예: 재헌)"
-            class="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400 focus:bg-white/10 transition">
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1.5">성별 & 외형 선택</label>
-          <div class="grid grid-cols-2 gap-3">
-            <button type="button" id="genderMaleBtn" onclick="selectGender('male')" 
-              class="p-3.5 rounded-2xl border transition flex flex-col items-center gap-1 border-amber-500/50 bg-amber-500/20 text-amber-200">
-              <span class="text-2xl">👦</span>
-              <span class="text-xs font-bold">남자 캐릭터</span>
-              <span class="text-[10px] text-slate-400">숏컷 & 네이비 자켓</span>
-            </button>
-            <button type="button" id="genderFemaleBtn" onclick="selectGender('female')" 
-              class="p-3.5 rounded-2xl border transition flex flex-col items-center gap-1 border-white/10 bg-white/5 text-slate-300 hover:bg-white/10">
-              <span class="text-2xl">👧</span>
-              <span class="text-xs font-bold">여자 캐릭터</span>
-              <span class="text-[10px] text-slate-400">롱 웨이브 & 리본</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <button onclick="saveProfile()" class="w-full py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm shadow-xl transition active:scale-95">
-        방으로 입장하기 ✨
-      </button>
-    </div>
-  </div>
-
   <!-- Modal: Work Desk (Projects) -->
   <div id="modalDesk" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden">
     <div class="glass-panel w-full max-w-xl rounded-3xl p-6 sm:p-8 shadow-2xl relative border border-white/20">
@@ -206,7 +155,7 @@
         </div>
         <div>
           <h3 class="text-lg font-bold text-white">나만의 작업실 모니터</h3>
-          <p id="deskSubtitle" class="text-xs text-slate-400">재헌이 진행 중인 주요 작업 목록</p>
+          <p class="text-xs text-slate-400">민서가 지금 진행 중인 주요 작업 목록</p>
         </div>
       </div>
       <div class="space-y-3 my-6 max-h-[60vh] overflow-y-auto custom-scroll pr-1">
@@ -361,54 +310,31 @@
 
       <!-- Tab Content 1: Updates (Strictly Top 5, newest first) -->
       <div id="noticeTabUpdates" class="space-y-2.5 my-3 max-h-[55vh] overflow-y-auto custom-scroll pr-1">
-        <!-- 테스트 확인용 최신 게시물 -->
-        <div class="p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/40">
-          <div class="flex justify-between items-center mb-1">
-            <span class="font-bold text-xs text-emerald-300 flex items-center gap-1.5">
-              <span class="px-1.5 py-0.5 rounded bg-emerald-400/20 text-[10px] font-mono text-emerald-200">v1.9</span>
-              ✨ 배포 및 업데이트 테스트 성공!
-            </span>
-            <span class="text-[10px] text-emerald-300 font-mono">LIVE</span>
-          </div>
-          <p class="text-xs text-slate-200 leading-relaxed">GitHub 커밋과 Netlify 배포가 정상적으로 연결되어 이 글이 정상 노출되었습니다.</p>
-        </div>
         <!-- 1 (Latest) -->
         <div class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30">
           <div class="flex justify-between items-center mb-1">
             <span class="font-bold text-xs text-amber-300 flex items-center gap-1.5">
-              <span class="px-1.5 py-0.5 rounded bg-amber-400/20 text-[10px] font-mono text-amber-200">v1.6</span>
-              캐릭터 커스텀 & 영구 저장 시스템
+              <span class="px-1.5 py-0.5 rounded bg-amber-400/20 text-[10px] font-mono text-amber-200">v1.5</span>
+              마을 광장 및 야외 맵 오픈
             </span>
             <span class="text-[10px] text-amber-300/80 font-mono">NEW</span>
           </div>
-          <p class="text-xs text-slate-300">내 이름 설정과 남/여 아바타 외형 선택이 추가되었으며, 브라우저를 껐다 켜도 데이터가 유지됩니다.</p>
+          <p class="text-xs text-slate-300">방 출입문으로 연결되는 야외 산책로 개방! 소원 분수대 동전 던지기, 벤치 휴식, 화단 정원이 추가되었습니다.</p>
         </div>
 
         <!-- 2 -->
         <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10">
           <div class="flex justify-between items-center mb-1">
             <span class="font-bold text-xs text-indigo-300 flex items-center gap-1.5">
-              <span class="px-1.5 py-0.5 rounded bg-indigo-400/20 text-[10px] font-mono text-indigo-200">v1.5</span>
-              마을 광장 및 야외 맵 오픈
-            </span>
-            <span class="text-[10px] text-slate-400 font-mono">패치</span>
-          </div>
-          <p class="text-xs text-slate-300">방 출입문으로 연결되는 야외 산책로 개방! 소원 분수대 동전 던지기, 벤치 휴식, 화단 정원이 추가되었습니다.</p>
-        </div>
-
-        <!-- 3 -->
-        <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10">
-          <div class="flex justify-between items-center mb-1">
-            <span class="font-bold text-xs text-indigo-300 flex items-center gap-1.5">
               <span class="px-1.5 py-0.5 rounded bg-indigo-400/20 text-[10px] font-mono text-indigo-200">v1.4</span>
               마을 공지 게시판 설치
             </span>
-            <span class="text-[10px] text-slate-400 font-mono">기능</span>
+            <span class="text-[10px] text-slate-400 font-mono">패치</span>
           </div>
           <p class="text-xs text-slate-300">광장 산책로에 최신 변경 내역과 소식을 열람할 수 있는 마을 게시판 및 탭 시스템이 구축되었습니다.</p>
         </div>
 
-        <!-- 4 -->
+        <!-- 3 -->
         <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10">
           <div class="flex justify-between items-center mb-1">
             <span class="font-bold text-xs text-indigo-300 flex items-center gap-1.5">
@@ -420,16 +346,28 @@
           <p class="text-xs text-slate-300">벽면이나 대각선 모서리에 끼이지 않고 장애물 표면을 따라 부드럽게 미끄러지도록 이동 엔진을 고도화했습니다.</p>
         </div>
 
-        <!-- 5 -->
+        <!-- 4 -->
         <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10">
           <div class="flex justify-between items-center mb-1">
             <span class="font-bold text-xs text-indigo-300 flex items-center gap-1.5">
               <span class="px-1.5 py-0.5 rounded bg-indigo-400/20 text-[10px] font-mono text-indigo-200">v1.2</span>
-              실내 가구 인터랙션 & 사운드 추가
+              실내 가구 인터랙션 추가
+            </span>
+            <span class="text-[10px] text-slate-400 font-mono">기능</span>
+          </div>
+          <p class="text-xs text-slate-300">작업 데스크 프로젝트 창, 브라우저 실시간 Web Audio 신디사이저 턴테이블, 모락모락 커피 스팀 효과가 추가되었습니다.</p>
+        </div>
+
+        <!-- 5 (5th) -->
+        <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10">
+          <div class="flex justify-between items-center mb-1">
+            <span class="font-bold text-xs text-indigo-300 flex items-center gap-1.5">
+              <span class="px-1.5 py-0.5 rounded bg-indigo-400/20 text-[10px] font-mono text-indigo-200">v1.1</span>
+              클릭 & 터치 이동 및 시선 전환 시스템
             </span>
             <span class="text-[10px] text-slate-400 font-mono">엔진</span>
           </div>
-          <p class="text-xs text-slate-300">작업 데스크 프로젝트 창, 브라우저 실시간 Web Audio 신디사이저 턴테이블, 모락모락 커피 스팀 효과가 추가되었습니다.</p>
+          <p class="text-xs text-slate-300">마우스 클릭과 모바일 화면 터치 좌표로 아바타가 걸어가며 방향별 시선과 걷기 바운스 모션이 적용되었습니다.</p>
         </div>
       </div>
 
@@ -536,7 +474,6 @@
     // UI elements
     const zoneBadge = document.getElementById('zoneBadge');
     const mapTitle = document.getElementById('mapTitle');
-    const deskSubtitle = document.getElementById('deskSubtitle');
     const zoneSubDesc = document.getElementById('zoneSubDesc');
     const zoneMainIcon = document.getElementById('zoneMainIcon');
     const doorQuickBtn = document.getElementById('doorQuickBtn');
@@ -576,93 +513,6 @@
       { name: '비 내리는 밤', icon: 'fa-moon', color: '#6882b8', ambient: 'rgba(15, 20, 50, 0.35)' }
     ];
 
-    // ================= USER PROFILE & LOCALSTORAGE =================
-    const STORAGE_KEY = 'cozy_room_profile_v2';
-    let userProfile = {
-      name: '재헌',
-      gender: 'male' // 'male' or 'female'
-    };
-    let tempSelectedGender = 'male';
-
-    function loadUserProfile() {
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          userProfile = JSON.parse(saved);
-          applyUserProfile();
-          return true;
-        }
-      } catch (e) {
-        console.error('로컬스토리지 로드 오류', e);
-      }
-      return false;
-    }
-
-    function applyUserProfile() {
-      updateHUDTheme();
-      if (deskSubtitle) {
-        deskSubtitle.textContent = `${userProfile.name}이(가) 진행 중인 주요 작업 목록`;
-      }
-      // Character costume/colors update based on gender
-      if (userProfile.gender === 'female') {
-        player.color = '#ec4899'; // Cozy Rose Pink
-        player.hairColor = '#451a03'; // Deep brown wavy hair
-      } else {
-        player.color = '#3b82f6'; // Clean Navy Blue
-        player.hairColor = '#1e1b24'; // Classic Dark Hair
-      }
-    }
-
-    function openProfileModal(isFirstTime = false) {
-      const modal = document.getElementById('modalProfile');
-      const input = document.getElementById('profileNameInput');
-      const closeBtn = document.getElementById('profileCloseBtn');
-
-      input.value = userProfile.name;
-      selectGender(userProfile.gender);
-
-      if (isFirstTime) {
-        closeBtn.classList.add('hidden');
-      } else {
-        closeBtn.classList.remove('hidden');
-      }
-
-      modal.classList.remove('hidden');
-    }
-
-    function selectGender(g) {
-      tempSelectedGender = g;
-      const maleBtn = document.getElementById('genderMaleBtn');
-      const femaleBtn = document.getElementById('genderFemaleBtn');
-      const icon = document.getElementById('profileAvatarIcon');
-
-      if (g === 'male') {
-        maleBtn.className = 'p-3.5 rounded-2xl border transition flex flex-col items-center gap-1 border-amber-500/50 bg-amber-500/20 text-amber-200';
-        femaleBtn.className = 'p-3.5 rounded-2xl border transition flex flex-col items-center gap-1 border-white/10 bg-white/5 text-slate-300 hover:bg-white/10';
-        icon.textContent = '👦';
-      } else {
-        femaleBtn.className = 'p-3.5 rounded-2xl border transition flex flex-col items-center gap-1 border-pink-500/50 bg-pink-500/20 text-pink-200';
-        maleBtn.className = 'p-3.5 rounded-2xl border transition flex flex-col items-center gap-1 border-white/10 bg-white/5 text-slate-300 hover:bg-white/10';
-        icon.textContent = '👧';
-      }
-    }
-
-    function saveProfile() {
-      const input = document.getElementById('profileNameInput');
-      const newName = input.value.trim() || '여행자';
-      userProfile.name = newName;
-      userProfile.gender = tempSelectedGender;
-
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(userProfile));
-      } catch (e) {
-        console.error('로컬스토리지 저장 실패', e);
-      }
-
-      applyUserProfile();
-      closeModal('modalProfile');
-    }
-
     // Character State
     const player = {
       x: 500,
@@ -674,8 +524,8 @@
       direction: 'down',
       moving: false,
       stepCycle: 0,
-      color: '#3b82f6',
-      hairColor: '#1e1b24',
+      color: '#4f46e5',
+      hairColor: '#2b1b17',
       faceColor: '#ffdbac'
     };
 
@@ -753,6 +603,7 @@
       bounds: { minX: 60, maxX: ROOM_WIDTH - 60, minY: 70, maxY: ROOM_HEIGHT - 60 },
       doorZone: { x: 450, y: 80, w: 100, h: 40, targetScene: 'room', spawn: { x: 500, y: ROOM_HEIGHT - 120, dir: 'up' } },
       furnitures: [
+        // House Entry Porch / Facade (Top center)
         {
           id: 'house_porch',
           name: '집 현관문',
@@ -763,6 +614,7 @@
           icon: '<i class="fa-solid fa-door-open"></i>',
           action: () => transitionToScene('room')
         },
+        // Central Plaza Fountain
         {
           id: 'fountain',
           name: '소원 분수대',
@@ -773,6 +625,7 @@
           icon: '<i class="fa-solid fa-droplet"></i>',
           action: () => openModal('modalFountain')
         },
+        // Left Park Bench & Big Tree
         {
           id: 'bench_left',
           name: '나무 그늘 벤치',
@@ -783,12 +636,14 @@
           icon: '<i class="fa-solid fa-chair"></i>',
           action: () => openModal('modalBench')
         },
+        // Big Tree (Obstacle next to bench)
         {
           id: 'tree_left',
           name: '단풍나무',
           x: 130, y: 150, w: 90, h: 90,
           type: 'tree', interactive: false, zone: '서쪽 정원'
         },
+        // Right Flower Garden Patch
         {
           id: 'flower_garden',
           name: '알록달록 화단',
@@ -798,6 +653,7 @@
           icon: '<i class="fa-solid fa-spa"></i>',
           action: () => openModal('modalFlowers')
         },
+        // Town Notice Bulletin (Bottom Left)
         {
           id: 'notice_board',
           name: '마을 안내 게시판',
@@ -807,6 +663,7 @@
           icon: '<i class="fa-solid fa-clipboard-list"></i>',
           action: () => openModal('modalNotice')
         },
+        // Right Big Tree (Bottom Right)
         {
           id: 'tree_right',
           name: '푸른 정원수',
@@ -859,6 +716,7 @@
         const sourceData = getCurrentSceneData();
         currentScene = newScene;
 
+        // Position player at new scene entry point
         const targetSpawn = sourceData.doorZone.spawn;
         player.x = targetSpawn.x;
         player.y = targetSpawn.y;
@@ -884,7 +742,7 @@
 
     function updateHUDTheme() {
       if (currentScene === 'room') {
-        mapTitle.textContent = `${userProfile.name}의 코지 스튜디오`;
+        mapTitle.textContent = '민서의 코지 스튜디오';
         zoneSubDesc.textContent = '바닥을 클릭하거나 아래 출입문으로 나가보세요';
         zoneMainIcon.className = 'fa-solid fa-house-chimney-window';
         doorQuickIcon.className = 'fa-solid fa-door-open text-amber-400';
@@ -950,19 +808,13 @@
     }, { passive: true });
 
     window.addEventListener('keydown', (e) => {
-      keys[e.code.toLowerCase()] = true;
       keys[e.key.toLowerCase()] = true;
-      if (e.code === 'Space' || e.code === 'KeyE' || e.key === ' ' || e.key.toLowerCase() === 'e') {
+      if (e.key === ' ' || e.key.toLowerCase() === 'e') {
         if (activeInteractive) {
           activeInteractive.action();
           e.preventDefault();
         }
       }
-    });
-
-    window.addEventListener('keyup', (e) => {
-      keys[e.code.toLowerCase()] = false;
-      keys[e.key.toLowerCase()] = false;
     });
 
     window.addEventListener('keyup', (e) => {
@@ -980,6 +832,7 @@
       }
 
       for (const item of sceneData.furnitures) {
+        // Door porch area allows passing to trigger map switch
         if (item.type === 'porch') continue;
 
         const inset = 6;
@@ -1005,6 +858,7 @@
       if (isTransitioning) return;
       const sceneData = getCurrentSceneData();
 
+      // Check door trigger
       const door = sceneData.doorZone;
       if (
         player.x >= door.x && player.x <= door.x + door.w &&
@@ -1017,10 +871,10 @@
       let dx = 0;
       let dy = 0;
 
-      const up = keys['keyw'] || keys['w'] || keys['ㅈ'] || keys['arrowup'];
-      const down = keys['keys'] || keys['s'] || keys['ㄴ'] || keys['arrowdown'];
-      const left = keys['keya'] || keys['a'] || keys['ㅁ'] || keys['arrowleft'];
-      const right = keys['keyd'] || keys['d'] || keys['ㅇ'] || keys['arrowright'];
+      const up = keys['w'] || keys['arrowup'];
+      const down = keys['s'] || keys['arrowdown'];
+      const left = keys['a'] || keys['arrowleft'];
+      const right = keys['d'] || keys['arrowright'];
 
       if (up || down || left || right) {
         if (up) dy -= 1;
@@ -1049,44 +903,20 @@
         }
       }
 
-      let moveX = 0;
-      let moveY = 0;
       let actuallyMoved = false;
-
       if (dx !== 0 || dy !== 0) {
-        // 원래 입력 방향으로 먼저 시선 고정 (벽에 부딪혀 멈춰도 누른 방향을 똑바로 봄)
-        if (Math.abs(dx) > Math.abs(dy)) {
-          player.direction = dx > 0 ? 'left' : 'right';
-        } else {
-          player.direction = dy > 0 ? 'up' : 'down';
-        }
-
         if (!checkCollision(player.x + dx, player.y + dy, player.radius)) {
           player.x += dx;
           player.y += dy;
-          moveX = dx;
-          moveY = dy;
           actuallyMoved = true;
         } else {
-          // 벽에 부딪혔을 때 미끄러지는 축(슬라이딩) 이동 처리
           if (!checkCollision(player.x + dx, player.y, player.radius)) {
             player.x += dx;
-            moveX = dx;
             actuallyMoved = true;
           }
           if (!checkCollision(player.x, player.y + dy, player.radius)) {
             player.y += dy;
-            moveY = dy;
             actuallyMoved = true;
-          }
-
-          // 벽을 타고 대각선으로 미끄러질 때만 미끄러지는 방향을 자연스럽게 봄
-          if (actuallyMoved) {
-            if (moveX !== 0 && moveY === 0) {
-              player.direction = moveX > 0 ? 'left' : 'right';
-            } else if (moveY !== 0 && moveX === 0) {
-              player.direction = moveY > 0 ? 'up' : 'down';
-            }
           }
         }
       }
@@ -1094,6 +924,11 @@
       if (actuallyMoved) {
         player.moving = true;
         player.stepCycle += 0.22;
+        if (Math.abs(dx) > Math.abs(dy)) {
+          player.direction = dx > 0 ? 'right' : 'left';
+        } else {
+          player.direction = dy > 0 ? 'down' : 'up';
+        }
 
         if (Math.random() < 0.2) {
           particles.push({
@@ -1110,6 +945,7 @@
         player.stepCycle = 0;
       }
 
+      // Check proximity to interactive objects
       let nearest = null;
       let minDistance = 80;
 
@@ -1124,6 +960,7 @@
         }
       }
 
+      // Door distance check prompt
       const doorCenterX = door.x + door.w / 2;
       const doorCenterY = door.y + door.h / 2;
       const distToDoor = Math.hypot(player.x - doorCenterX, player.y - doorCenterY);
@@ -1154,6 +991,7 @@
     function drawRoomScene() {
       const bounds = roomScene.bounds;
 
+      // Wooden Plank Floor
       ctx.fillStyle = '#4a2d1d';
       ctx.fillRect(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
 
@@ -1166,6 +1004,7 @@
         ctx.stroke();
       }
 
+      // Rugs
       ctx.fillStyle = '#1e293b';
       roundRect(ctx, 370, 260, 260, 200, 20, true, false);
       ctx.strokeStyle = '#38bdf8';
@@ -1175,28 +1014,36 @@
       ctx.fillStyle = '#312e81';
       roundRect(ctx, 220, 460, 80, 140, 16, true, false);
 
+      // North Wall
       const wallGrad = ctx.createLinearGradient(0, 0, 0, bounds.minY);
       wallGrad.addColorStop(0, '#191522');
       wallGrad.addColorStop(1, '#2d2238');
       ctx.fillStyle = wallGrad;
       ctx.fillRect(bounds.minX - 20, 30, (bounds.maxX - bounds.minX) + 40, bounds.minY - 30);
 
+      // Window
       drawWindow(420, 25, 160, 65);
 
+      // Side Walls
       ctx.fillStyle = '#191522';
       ctx.fillRect(bounds.minX - 25, 30, 25, bounds.maxY - 30);
       ctx.fillRect(bounds.maxX, 30, 25, bounds.maxY - 30);
 
+      // Bottom Wall with EXIT DOOR TO OUTSIDE
       ctx.fillStyle = '#1f1627';
+      // Left bottom wall
       ctx.fillRect(bounds.minX - 25, bounds.maxY, (450 - bounds.minX) + 25, 35);
+      // Right bottom wall
       ctx.fillRect(550, bounds.maxY, (bounds.maxX - 550) + 25, 35);
 
+      // Door Mat & Exit Pathway
       ctx.fillStyle = '#b45309';
       roundRect(ctx, 455, bounds.maxY - 25, 90, 30, 6, true, false);
       ctx.strokeStyle = '#f59e0b';
       ctx.lineWidth = 1.5;
       roundRect(ctx, 458, bounds.maxY - 22, 84, 24, 4, false, true);
 
+      // Doorway Threshold (Glowing portal indicator)
       ctx.fillStyle = '#38bdf8';
       ctx.fillRect(460, bounds.maxY + 5, 80, 12);
       ctx.fillStyle = '#ffffff';
@@ -1209,9 +1056,11 @@
     function drawPlazaScene() {
       const bounds = plazaScene.bounds;
 
+      // 1. Lush Green Lawn Background
       ctx.fillStyle = '#2d6a4f';
       ctx.fillRect(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
 
+      // Subtle grass texture patches
       ctx.fillStyle = '#40916c';
       for (let i = 0; i < 30; i++) {
         const gx = bounds.minX + ((i * 73) % (bounds.maxX - bounds.minX - 40));
@@ -1221,7 +1070,9 @@
         ctx.fill();
       }
 
+      // 2. Cobblestone Paved Paths (Cross roads to house and plaza)
       ctx.fillStyle = '#94a3b8';
+      // Center square plaza ring
       ctx.beginPath();
       ctx.arc(500, 370, 140, 0, Math.PI * 2);
       ctx.fill();
@@ -1229,10 +1080,14 @@
       ctx.lineWidth = 3;
       ctx.stroke();
 
+      // North Path to House Door
       ctx.fillStyle = '#94a3b8';
       ctx.fillRect(445, bounds.minY, 110, 260);
+
+      // Horizontal walkway path
       ctx.fillRect(bounds.minX + 20, 340, bounds.maxX - bounds.minX - 40, 60);
 
+      // Cobblestone Brick details
       ctx.strokeStyle = '#64748b';
       ctx.lineWidth = 1;
       for (let y = bounds.minY + 10; y < 340; y += 22) {
@@ -1242,8 +1097,10 @@
         ctx.stroke();
       }
 
+      // 3. House Porch / Entrance Facade at North
       ctx.fillStyle = '#1e293b';
       roundRect(ctx, 420, bounds.minY - 15, 160, 65, 8, true, false);
+      // Red House Roof Eaves
       ctx.fillStyle = '#991b1b';
       ctx.beginPath();
       ctx.moveTo(410, bounds.minY + 15);
@@ -1252,6 +1109,7 @@
       ctx.closePath();
       ctx.fill();
 
+      // House Door
       ctx.fillStyle = '#78350f';
       roundRect(ctx, 475, bounds.minY + 10, 50, 48, 6, true, false);
       ctx.fillStyle = '#f59e0b';
@@ -1259,6 +1117,7 @@
       ctx.arc(483, bounds.minY + 34, 3, 0, Math.PI * 2);
       ctx.fill();
 
+      // Welcome Mat
       ctx.fillStyle = '#334155';
       roundRect(ctx, 470, bounds.minY + 54, 60, 14, 3, true, false);
       ctx.fillStyle = '#ffffff';
@@ -1266,6 +1125,7 @@
       ctx.textAlign = 'center';
       ctx.fillText('HOME ➜', 500, bounds.minY + 65);
 
+      // 4. Street Lamps
       drawStreetLamp(380, 220);
       drawStreetLamp(620, 220);
       drawStreetLamp(360, 470);
@@ -1273,12 +1133,15 @@
     }
 
     function drawStreetLamp(x, y) {
+      // Lamp Post
       ctx.fillStyle = '#0f172a';
       ctx.fillRect(x - 2, y, 4, 30);
+      // Lamp Head
       ctx.fillStyle = '#fef08a';
       ctx.beginPath();
       ctx.arc(x, y - 4, 7, 0, Math.PI * 2);
       ctx.fill();
+      // Glow halo
       ctx.fillStyle = 'rgba(254, 240, 138, 0.18)';
       ctx.beginPath();
       ctx.arc(x, y - 4, 18, 0, Math.PI * 2);
@@ -1323,6 +1186,7 @@
         ctx.save();
 
         if (currentScene === 'room') {
+          // Room furniture items
           ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
           roundRect(ctx, item.x + 4, item.y + 6, item.w, item.h, 12, true, false);
 
@@ -1434,7 +1298,9 @@
           }
 
         } else {
+          // Outdoor Plaza scenic elements
           if (item.type === 'fountain') {
+            // Stone Basin Outer Tier
             ctx.fillStyle = '#64748b';
             ctx.beginPath();
             ctx.ellipse(item.x + item.w / 2, item.y + item.h / 2, item.w / 2, item.h / 2, 0, 0, Math.PI * 2);
@@ -1443,11 +1309,13 @@
             ctx.lineWidth = 4;
             ctx.stroke();
 
+            // Clear Blue Pool Water
             ctx.fillStyle = '#0284c7';
             ctx.beginPath();
             ctx.ellipse(item.x + item.w / 2, item.y + item.h / 2, item.w / 2 - 10, item.h / 2 - 10, 0, 0, Math.PI * 2);
             ctx.fill();
 
+            // Water Ripple Animation
             const wave = Math.sin(Date.now() * 0.005) * 4;
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
             ctx.lineWidth = 2;
@@ -1455,20 +1323,24 @@
             ctx.ellipse(item.x + item.w / 2, item.y + item.h / 2, 35 + wave, 22 + wave, 0, 0, Math.PI * 2);
             ctx.stroke();
 
+            // Center Spout Spurt
             ctx.fillStyle = '#ffffff';
             ctx.beginPath();
             ctx.arc(item.x + item.w / 2, item.y + item.h / 2 - 6, 9 + wave * 0.5, 0, Math.PI * 2);
             ctx.fill();
 
           } else if (item.type === 'tree') {
+            // Tree Trunk Shadow
             ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
             ctx.beginPath();
             ctx.ellipse(item.x + item.w / 2, item.y + item.h - 10, 35, 16, 0, 0, Math.PI * 2);
             ctx.fill();
 
+            // Tree Trunk
             ctx.fillStyle = '#78350f';
             roundRect(ctx, item.x + item.w / 2 - 10, item.y + item.h / 2, 20, item.h / 2, 4, true, false);
 
+            // Lush Foliage
             ctx.fillStyle = item.id === 'tree_left' ? '#15803d' : '#16a34a';
             ctx.beginPath();
             ctx.arc(item.x + item.w / 2, item.y + item.h / 2 - 15, 42, 0, Math.PI * 2);
@@ -1479,21 +1351,25 @@
           } else if (item.type === 'bench') {
             ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
             roundRect(ctx, item.x + 3, item.y + 6, item.w, item.h, 6, true, false);
+            // Wood Slats
             ctx.fillStyle = '#b45309';
             roundRect(ctx, item.x, item.y, item.w, 14, 4, true, false);
             roundRect(ctx, item.x, item.y + 18, item.w, 14, 4, true, false);
             roundRect(ctx, item.x, item.y + 36, item.w, 14, 4, true, false);
+            // Metal Bench Legs
             ctx.fillStyle = '#0f172a';
             ctx.fillRect(item.x + 6, item.y, 6, item.h);
             ctx.fillRect(item.x + item.w - 12, item.y, 6, item.h);
 
           } else if (item.type === 'garden') {
+            // Flower Garden Soil Bed
             ctx.fillStyle = '#3f2212';
             roundRect(ctx, item.x, item.y, item.w, item.h, 16, true, false);
             ctx.strokeStyle = '#78350f';
             ctx.lineWidth = 3;
             roundRect(ctx, item.x, item.y, item.w, item.h, 16, false, true);
 
+            // Colorful Flower heads
             const flowerColors = ['#f43f5e', '#ec4899', '#a855f7', '#fbbf24', '#ffffff'];
             for (let f = 0; f < 18; f++) {
               const fx = item.x + 18 + ((f * 26) % (item.w - 36));
@@ -1505,12 +1381,14 @@
             }
 
           } else if (item.type === 'notice') {
+            // Wooden Notice Board
             ctx.fillStyle = '#78350f';
             ctx.fillRect(item.x + 10, item.y + item.h - 15, 8, 25);
             ctx.fillRect(item.x + item.w - 18, item.y + item.h - 15, 8, 25);
 
             ctx.fillStyle = '#92400e';
             roundRect(ctx, item.x, item.y, item.w, item.h - 10, 6, true, false);
+            // Board Poster Paper
             ctx.fillStyle = '#fef08a';
             roundRect(ctx, item.x + 8, item.y + 6, item.w - 16, item.h - 22, 3, true, false);
             ctx.fillStyle = '#475569';
@@ -1520,6 +1398,7 @@
           }
         }
 
+        // Floating interactive highlight pin
         if (item.interactive && item.type !== 'porch') {
           const badgeX = item.x + item.w / 2;
           const badgeY = item.y - 12 + Math.sin(Date.now() * 0.005) * 3;
@@ -1537,6 +1416,7 @@
       });
     }
 
+    // Helper: Round Rectangle path
     function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
       ctx.beginPath();
       ctx.moveTo(x + radius, y);
@@ -1553,7 +1433,7 @@
       if (stroke) ctx.stroke();
     }
 
-    // ================= DRAW CHARACTER AVATAR WITH GENDER STYLING =================
+    // Draw Character Avatar
     function drawAvatar() {
       ctx.save();
       const x = player.x;
@@ -1577,40 +1457,12 @@
       ctx.arc(x + 5, y + 12 + legOffset, 4, 0, Math.PI * 2);
       ctx.fill();
 
-      // Lower Body (Pants vs Skirt)
-      if (userProfile.gender === 'female') {
-        // Skirt
-        ctx.fillStyle = '#9d174d';
-        ctx.beginPath();
-        ctx.moveTo(x - 11, y + 6 + bounce);
-        ctx.lineTo(x + 11, y + 6 + bounce);
-        ctx.lineTo(x + 13, y + 13 + bounce);
-        ctx.lineTo(x - 13, y + 13 + bounce);
-        ctx.closePath();
-        ctx.fill();
-      } else {
-        // Slacks Pants
-        ctx.fillStyle = '#334155';
-        ctx.fillRect(x - 7, y + 8 + bounce, 5, 6);
-        ctx.fillRect(x + 2, y + 8 + bounce, 5, 6);
-      }
-
-      // Upper Body / Outfit
+      // Body / Hoodie
       ctx.fillStyle = player.color;
-      roundRect(ctx, x - 12, y - 6 + bounce, 24, 16, 6, true, false);
+      roundRect(ctx, x - 12, y - 6 + bounce, 24, 18, 7, true, false);
 
-      // Shirt collar / Ribbon accent
-      if (userProfile.gender === 'female') {
-        // Small cute neck ribbon
-        ctx.fillStyle = '#fde047';
-        ctx.beginPath();
-        ctx.arc(x, y - 4 + bounce, 3, 0, Math.PI * 2);
-        ctx.fill();
-      } else {
-        // Inner shirt collar strip
-        ctx.fillStyle = '#e2e8f0';
-        ctx.fillRect(x - 2, y - 4 + bounce, 4, 9);
-      }
+      ctx.fillStyle = '#e0e7ff';
+      ctx.fillRect(x - 2, y - 4 + bounce, 4, 10);
 
       // Head
       ctx.fillStyle = player.faceColor;
@@ -1618,29 +1470,13 @@
       ctx.arc(x, y - 16 + bounce, 12, 0, Math.PI * 2);
       ctx.fill();
 
-      // Gender-specific Hair
+      // Hair
       ctx.fillStyle = player.hairColor;
-      if (userProfile.gender === 'female') {
-        // Long wavy hair
-        ctx.beginPath();
-        ctx.arc(x, y - 19 + bounce, 13, Math.PI * 0.85, Math.PI * 2.15);
-        ctx.fill();
-        // Hair sides drooping down
-        ctx.beginPath();
-        roundRect(ctx, x - 14, y - 18 + bounce, 5, 20, 2.5, true, false);
-        roundRect(ctx, x + 9, y - 18 + bounce, 5, 20, 2.5, true, false);
-        // Hair bow/pin
-        ctx.fillStyle = '#fbbf24';
-        ctx.fillRect(x + 7, y - 22 + bounce, 5, 4);
-      } else {
-        // Clean male neat haircut
-        ctx.beginPath();
-        ctx.arc(x, y - 19 + bounce, 13, Math.PI * 0.9, Math.PI * 2.1);
-        ctx.fill();
-        ctx.fillRect(x - 11, y - 20 + bounce, 22, 6);
-      }
+      ctx.beginPath();
+      ctx.arc(x, y - 19 + bounce, 13, Math.PI * 0.9, Math.PI * 2.1);
+      ctx.fill();
 
-      // Face direction & Blush
+      // Face direction
       ctx.fillStyle = '#1e1b24';
       if (player.direction === 'down') {
         ctx.beginPath();
@@ -1669,19 +1505,6 @@
         ctx.arc(x + 7, y - 12 + bounce, 2, 0, Math.PI * 2);
         ctx.fill();
       }
-
-      // Name Tag over Avatar's head
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
-      const tagWidth = Math.max(48, userProfile.name.length * 13 + 16);
-      roundRect(ctx, x - tagWidth / 2, y - 38 + bounce, tagWidth, 16, 8, true, false);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-      ctx.lineWidth = 1;
-      roundRect(ctx, x - tagWidth / 2, y - 38 + bounce, tagWidth, 16, 8, false, true);
-
-      ctx.fillStyle = '#f8fafc';
-      ctx.font = 'bold 10px Pretendard, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(userProfile.name, x, y - 26 + bounce);
 
       ctx.restore();
     }
@@ -1751,6 +1574,7 @@
       drawAvatar();
       drawParticles();
 
+      // Ambient Lighting Tint Overlay
       ctx.fillStyle = moods[currentMood].ambient;
       ctx.fillRect(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
 
@@ -1854,6 +1678,7 @@
       }
     }
 
+    // Notice Board Tab Switching
     function switchNoticeTab(tabKey) {
       const tabs = ['updates', 'events', 'news'];
       tabs.forEach(t => {
@@ -1948,15 +1773,10 @@
     // ================= INITIALIZATION =================
     window.addEventListener('load', () => {
       resizeCanvas();
-      const hasProfile = loadUserProfile();
+      updateHUDTheme();
       updateShortcutsUI();
       animate();
-
-      // If user visits for the first time, open the onboarding modal automatically
-      if (!hasProfile) {
-        openProfileModal(true);
-      }
     });
   </script>
 </body>
-</html>
+</html><script async src="/.netlify/scripts/hud?variant=owner-private" data-nf-variant="owner-private" data-netlify-site-id="0be08c82-a3e5-4943-8781-671a1c025358" data-app-host="app.netlify.com"></script>
