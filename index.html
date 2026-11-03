@@ -906,19 +906,25 @@
       }
 
       let actuallyMoved = false;
-      if (dx !== 0 || dy !== 0) {
+
+      // 이동량이 0.05보다 작으면 완전히 멈춘 것으로 판정하여 불필요한 시선 역전 차단
+      if (Math.hypot(dx, dy) > 0.05) {
         if (!checkCollision(player.x + dx, player.y + dy, player.radius)) {
           player.x += dx;
           player.y += dy;
           actuallyMoved = true;
         } else {
+          // 벽 충돌 시 슬라이딩 이동 처리
           if (!checkCollision(player.x + dx, player.y, player.radius)) {
             player.x += dx;
             actuallyMoved = true;
-          }
-          if (!checkCollision(player.x, player.y + dy, player.radius)) {
+          } else if (!checkCollision(player.x, player.y + dy, player.radius)) {
             player.y += dy;
             actuallyMoved = true;
+          } else {
+            // 벽에 완전히 막혔을 때는 마우스 목표 지점을 현재 위치로 리셋
+            player.targetX = player.x;
+            player.targetY = player.y;
           }
         }
       }
@@ -926,11 +932,29 @@
       if (actuallyMoved) {
         player.moving = true;
         player.stepCycle += 0.22;
+
+        // 실제로 앞으로 확실히 이동 중일 때만 시선 갱신 (멈추는 순간에는 시선을 절대 건드리지 않음)
         if (Math.abs(dx) > Math.abs(dy)) {
-          player.direction = dx > 0 ? 'right' : 'left';
+          player.direction = dx > 0 ? 'left' : 'right';
         } else {
-          player.direction = dy > 0 ? 'down' : 'up';
+          player.direction = dy > 0 ? 'up' : 'down';
         }
+
+        if (Math.random() < 0.2) {
+          particles.push({
+            x: player.x + (Math.random() - 0.5) * 8,
+            y: player.y + 12,
+            vx: -dx * 0.08,
+            vy: -0.2,
+            life: 0.5,
+            color: currentScene === 'room' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(34, 197, 94, 0.3)'
+          });
+        }
+      } else {
+        // 이동이 멈췄을 때: 기존 direction 값을 그대로 유지하고 모션만 정지
+        player.moving = false;
+        player.stepCycle = 0;
+      }
 
         if (Math.random() < 0.2) {
           particles.push({
