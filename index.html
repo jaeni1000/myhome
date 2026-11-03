@@ -3,1026 +3,1923 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>나만의 코지 스튜디오 & 마을 광장</title>
+  <title>마이 코지 룸 (My Cozy Room) - 아바타 하우스 탐험</title>
+  
+  <!-- Fonts -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Pretendard', '-apple-system', 'sans-serif'],
+          },
+          colors: {
+            amberWood: '#3b2518',
+            warmGold: '#f6d365',
+            cozyBg: '#1f1b24',
+          }
+        }
+      }
+    }
+  </script>
+
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&display=swap');
-    body {
-      font-family: 'Pretendard', sans-serif;
-      touch-action: none;
+    * {
       user-select: none;
       -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #1a1721;
+    }
+    canvas {
+      display: block;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+    }
+    /* Modal glass style */
+    .glass-panel {
+      background: rgba(26, 22, 34, 0.88);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
     }
     .custom-scroll::-webkit-scrollbar {
       width: 6px;
     }
-    .custom-scroll::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.05);
-      border-radius: 9999px;
-    }
     .custom-scroll::-webkit-scrollbar-thumb {
-      background: rgba(140, 120, 100, 0.3);
+      background: rgba(255, 255, 255, 0.2);
       border-radius: 9999px;
     }
   </style>
 </head>
-<body class="bg-stone-900 text-stone-100 min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 overflow-hidden select-none">
+<body class="w-full h-full text-slate-100 flex flex-col justify-between font-sans">
 
-  <!-- 메인 게임 컨테이너 -->
-  <div class="relative w-full max-w-[960px] bg-stone-800 rounded-2xl shadow-2xl overflow-hidden border border-stone-700/60 flex flex-col">
-    
-    <!-- 상단 상태바 -->
-    <header class="flex items-center justify-between px-4 py-3 bg-stone-850 border-b border-stone-700/50 z-10 flex-wrap gap-2">
-      <div class="flex items-center gap-3">
-        <span class="text-2xl" id="map-icon">🏡</span>
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 id="title-display" class="font-bold text-stone-100 text-base sm:text-lg">재헌의 코지 스튜디오</h1>
-            <span id="location-badge" class="px-2 py-0.5 text-xs rounded-full bg-amber-500/20 text-amber-300 font-medium border border-amber-500/30">실내 거실</span>
-          </div>
-          <p id="sub-prompt" class="text-xs text-stone-400">바닥을 클릭해 원하는 곳으로 걸어가 보세요</p>
-        </div>
+  <!-- ================= TOP HUD ================= -->
+  <header class="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-4 pointer-events-none">
+    <!-- Room Title & Status -->
+    <div class="pointer-events-auto flex items-center gap-3 glass-panel px-4 py-2.5 rounded-2xl shadow-lg">
+      <div id="zoneIconWrapper" class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center text-lg">
+        <i id="zoneMainIcon" class="fa-solid fa-house-chimney-window"></i>
       </div>
-
-      <div class="flex items-center gap-2">
-        <button id="profile-edit-btn" class="px-3 py-1.5 rounded-xl bg-stone-700 hover:bg-stone-600 text-stone-200 text-xs font-medium border border-stone-600 transition flex items-center gap-1.5 shadow-sm">
-          <span>👤</span> 프로필 수정
-        </button>
-        <button id="scene-toggle-btn" class="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold shadow-md transition flex items-center gap-1.5">
-          <span>🚪</span> 밖으로 나가기
-        </button>
-        <button id="music-btn" class="px-3 py-1.5 rounded-xl bg-stone-700/80 hover:bg-stone-600 text-stone-300 text-xs font-medium border border-stone-600 transition flex items-center gap-1.5">
-          <span id="music-icon">🎵</span> 신스 BGM
-        </button>
-      </div>
-    </header>
-
-    <!-- 캔버스 영역 -->
-    <div class="relative w-full aspect-[4/3] max-h-[640px] bg-stone-950 flex items-center justify-center overflow-hidden">
-      <canvas id="gameCanvas" width="960" height="640" class="w-full h-full object-contain cursor-pointer"></canvas>
-      
-      <!-- 암전 페이드 트랜지션 오버레이 -->
-      <div id="fade-overlay" class="absolute inset-0 bg-stone-950 opacity-0 pointer-events-none transition-opacity duration-300 z-20"></div>
-
-      <!-- 플로팅 토스트 알림창 -->
-      <div id="toast" class="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-stone-900/90 text-amber-200 text-xs sm:text-sm font-medium rounded-full border border-amber-500/40 shadow-xl backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-200 z-30 flex items-center gap-2">
-        <span id="toast-icon">✨</span>
-        <span id="toast-msg">메시지</span>
+      <div>
+        <h1 class="text-sm font-bold tracking-tight text-white flex items-center gap-2">
+          <span id="mapTitle">재헌의 코지 스튜디오</span>
+          <span id="zoneBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 font-medium">
+            거실 라운지
+          </span>
+        </h1>
+        <p id="zoneSubDesc" class="text-[11px] text-slate-400">바닥을 클릭하거나 출입문으로 나가보세요</p>
       </div>
     </div>
 
-    <!-- 하단 조작 가이드 -->
-    <footer class="px-4 py-2.5 bg-stone-900 border-t border-stone-800 text-[11px] sm:text-xs text-stone-400 flex items-center justify-between flex-wrap gap-2">
-      <div class="flex items-center gap-3">
-        <span class="flex items-center gap-1"><kbd class="px-1.5 py-0.5 rounded bg-stone-800 border border-stone-700 text-stone-300">클릭</kbd> 또는 <kbd class="px-1.5 py-0.5 rounded bg-stone-800 border border-stone-700 text-stone-300">터치</kbd> 로 이동</span>
-        <span class="hidden sm:inline-flex items-center gap-1"><kbd class="px-1.5 py-0.5 rounded bg-stone-800 border border-stone-700 text-stone-300">W A S D</kbd> 방향키 조작</span>
-      </div>
-      <div class="flex items-center gap-2 text-stone-400">
-        <span>현재 캐릭터: <strong id="avatar-desc" class="text-stone-200">재헌 (남성)</strong></span>
-      </div>
-    </footer>
-  </div>
+    <!-- Quick Tool Controls -->
+    <div class="pointer-events-auto flex items-center gap-2">
+      <!-- Profile Customization Button -->
+      <button id="profileEditBtn" onclick="openProfileModal(false)" class="glass-panel px-3.5 py-2 rounded-xl text-xs font-semibold text-amber-300 hover:bg-white/10 transition flex items-center gap-1.5 shadow-md">
+        <i class="fa-solid fa-user-pen text-amber-400"></i>
+        <span class="hidden sm:inline">프로필 수정</span>
+      </button>
 
-  <!-- 프로필 설정 / 첫 접속 온보딩 모달 -->
-  <div id="profile-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-stone-850 border border-stone-700 rounded-2xl w-full max-w-md p-6 shadow-2xl text-stone-100 relative">
-      <div class="text-center mb-6">
-        <div class="w-16 h-16 mx-auto rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-3xl mb-3 shadow-inner" id="preview-avatar-icon">
-          🧑
-        </div>
-        <h2 class="text-xl font-bold text-stone-100">캐릭터 프로필 생성</h2>
-        <p class="text-xs text-stone-400 mt-1">이름과 성별을 고르고 나만의 아지트로 입장하세요!</p>
-      </div>
+      <!-- Door Transition Shortcut Button -->
+      <button id="doorQuickBtn" onclick="toggleMapScene()" class="glass-panel px-3.5 py-2 rounded-xl text-xs font-semibold text-sky-300 hover:bg-white/10 transition flex items-center gap-1.5 shadow-md">
+        <i id="doorQuickIcon" class="fa-solid fa-door-open text-amber-400"></i>
+        <span id="doorQuickText">밖으로 나가기</span>
+      </button>
 
-      <div class="space-y-4">
+      <!-- Time Mood Toggle -->
+      <button id="timeMoodBtn" class="glass-panel px-3.5 py-2 rounded-xl text-xs font-medium text-amber-300 hover:bg-white/10 transition flex items-center gap-1.5 shadow-md">
+        <i id="timeMoodIcon" class="fa-solid fa-sun"></i>
+        <span id="timeMoodText" class="hidden sm:inline">오후 햇살</span>
+      </button>
+
+      <!-- Lo-Fi Music Synth Toggle -->
+      <button id="musicToggleBtn" class="glass-panel px-3.5 py-2 rounded-xl text-xs font-medium text-emerald-300 hover:bg-white/10 transition flex items-center gap-1.5 shadow-md">
+        <i id="musicIcon" class="fa-solid fa-volume-xmark"></i>
+        <span class="hidden sm:inline">로파이 LP</span>
+      </button>
+
+      <!-- Info Modal Open -->
+      <button id="helpBtn" class="glass-panel p-2.5 rounded-xl text-xs font-medium text-slate-300 hover:bg-white/10 transition shadow-md">
+        <i class="fa-solid fa-circle-question text-sm"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ================= CANVAS WRAPPER ================= -->
+  <main class="relative w-full h-full flex items-center justify-center overflow-hidden">
+    <canvas id="roomCanvas" class="w-full h-full cursor-crosshair"></canvas>
+
+    <!-- Scene Transition Fade Overlay -->
+    <div id="sceneFadeOverlay" class="absolute inset-0 bg-slate-950 pointer-events-none opacity-0 transition-opacity duration-500 z-40"></div>
+
+    <!-- Floating Interactive Action Bubble for Mobile & Quick Click -->
+    <div id="interactionPrompt" class="absolute bottom-24 z-20 pointer-events-none opacity-0 translate-y-3 transition-all duration-300 flex justify-center w-full">
+      <button id="interactionBtn" class="pointer-events-auto flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-amber-500 text-slate-950 font-bold text-sm shadow-2xl hover:scale-105 active:scale-95 transition-all">
+        <span id="promptIcon" class="text-base"><i class="fa-solid fa-mug-hot"></i></span>
+        <span id="promptLabel">따뜻한 커피 내리기</span>
+        <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-900/20 uppercase tracking-wider font-mono">[Space / E]</span>
+      </button>
+    </div>
+  </main>
+
+  <!-- ================= BOTTOM NAVIGATION & SHORTCUTS ================= -->
+  <footer class="absolute bottom-4 left-4 right-4 z-20 pointer-events-none flex items-end justify-between">
+    <!-- Movement Hint Badge -->
+    <div class="pointer-events-auto glass-panel px-3.5 py-2 rounded-xl text-[11px] text-slate-300 hidden sm:flex items-center gap-2">
+      <span class="px-1.5 py-0.5 rounded bg-white/10 font-mono text-[10px] text-amber-300">클릭</span> 또는 
+      <span class="px-1.5 py-0.5 rounded bg-white/10 font-mono text-[10px] text-amber-300">W A S D</span> 이동 |
+      <span class="text-sky-300"><i class="fa-solid fa-person-walking-arrow-right"></i> 출입문</span> 통과 시 이동
+    </div>
+
+    <!-- Quick Teleport Shortcuts (Dynamic based on current scene) -->
+    <div id="shortcutsContainer" class="pointer-events-auto glass-panel p-1.5 rounded-2xl flex gap-1">
+      <!-- Injected by JavaScript -->
+    </div>
+  </footer>
+
+  <!-- ================= MODALS & DIALOGS ================= -->
+
+  <!-- Modal: Character Creation / Profile Onboarding -->
+  <div id="modalProfile" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md hidden">
+    <div class="glass-panel w-full max-w-md rounded-3xl p-6 sm:p-8 shadow-2xl relative border border-white/20 text-center">
+      <button id="profileCloseBtn" onclick="closeModal('modalProfile')" class="absolute top-5 right-5 text-slate-400 hover:text-white text-lg p-2 hidden">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="w-16 h-16 mx-auto rounded-3xl bg-amber-500/20 text-amber-300 flex items-center justify-center text-3xl mb-3 shadow-inner">
+        <span id="profileAvatarIcon">👦</span>
+      </div>
+      <h3 class="text-xl font-bold text-white mb-1">캐릭터 프로필 설정</h3>
+      <p class="text-xs text-slate-400 mb-6">이름과 성별을 선택해 나만의 아지트를 시작하세요</p>
+
+      <div class="space-y-4 text-left mb-6">
         <div>
-          <label class="block text-xs font-semibold text-stone-300 mb-1.5">당신의 이름(닉네임)</label>
-          <input type="text" id="input-name" maxlength="10" placeholder="이름을 입력하세요 (예: 재헌)" 
-            class="w-full px-4 py-2.5 rounded-xl bg-stone-900 border border-stone-700 text-stone-100 placeholder-stone-500 focus:outline-none focus:border-amber-500 text-sm">
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">이름 (닉네임)</label>
+          <input type="text" id="profileNameInput" maxlength="10" placeholder="이름을 입력해주세요 (예: 재헌)"
+            class="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400 focus:bg-white/10 transition">
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-stone-300 mb-1.5">캐릭터 성별 & 외형 선택</label>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">성별 & 외형 선택</label>
           <div class="grid grid-cols-2 gap-3">
-            <button type="button" id="gender-male" class="gender-btn flex flex-col items-center p-3 rounded-xl border border-stone-700 bg-stone-800/80 hover:bg-stone-750 transition active:scale-95">
-              <span class="text-2xl mb-1">👦</span>
-              <span class="text-sm font-bold text-stone-200">남자 아바타</span>
-              <span class="text-[10px] text-stone-400 mt-0.5">단정한 숏컷 & 자켓</span>
+            <button type="button" id="genderMaleBtn" onclick="selectGender('male')" 
+              class="p-3.5 rounded-2xl border transition flex flex-col items-center gap-1 border-amber-500/50 bg-amber-500/20 text-amber-200">
+              <span class="text-2xl">👦</span>
+              <span class="text-xs font-bold">남자 캐릭터</span>
+              <span class="text-[10px] text-slate-400">숏컷 & 네이비 자켓</span>
             </button>
-            <button type="button" id="gender-female" class="gender-btn flex flex-col items-center p-3 rounded-xl border border-stone-700 bg-stone-800/80 hover:bg-stone-750 transition active:scale-95">
-              <span class="text-2xl mb-1">👧</span>
-              <span class="text-sm font-bold text-stone-200">여자 아바타</span>
-              <span class="text-[10px] text-stone-400 mt-0.5">웨이브 롱헤어 & 리본</span>
+            <button type="button" id="genderFemaleBtn" onclick="selectGender('female')" 
+              class="p-3.5 rounded-2xl border transition flex flex-col items-center gap-1 border-white/10 bg-white/5 text-slate-300 hover:bg-white/10">
+              <span class="text-2xl">👧</span>
+              <span class="text-xs font-bold">여자 캐릭터</span>
+              <span class="text-[10px] text-slate-400">롱 웨이브 & 리본</span>
             </button>
           </div>
         </div>
       </div>
 
-      <div class="mt-6 flex justify-end gap-2">
-        <button id="cancel-profile-btn" class="px-4 py-2 rounded-xl bg-stone-750 hover:bg-stone-700 text-stone-300 text-xs font-medium transition hidden">취소</button>
-        <button id="save-profile-btn" class="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-sm shadow-lg transition">시작하기</button>
-      </div>
+      <button onclick="saveProfile()" class="w-full py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm shadow-xl transition active:scale-95">
+        방으로 입장하기 ✨
+      </button>
     </div>
   </div>
 
-  <!-- 공지 게시판 모달 (수정사항 5개 역순) -->
-  <div id="board-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-stone-850 border border-stone-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl text-stone-100 flex flex-col max-h-[85vh]">
-      <div class="flex items-center justify-between pb-3 border-b border-stone-700/80">
-        <div class="flex items-center gap-2">
-          <span class="text-2xl">📋</span>
-          <h2 class="text-lg font-bold">마을 광장 공지 게시판</h2>
+  <!-- Modal: Work Desk (Projects) -->
+  <div id="modalDesk" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden">
+    <div class="glass-panel w-full max-w-xl rounded-3xl p-6 sm:p-8 shadow-2xl relative border border-white/20">
+      <button onclick="closeModal('modalDesk')" class="absolute top-5 right-5 text-slate-400 hover:text-white text-lg p-2">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl">
+          <i class="fa-solid fa-laptop-code"></i>
         </div>
-        <button id="close-board-btn" class="w-8 h-8 rounded-lg bg-stone-800 hover:bg-stone-700 flex items-center justify-center text-stone-400 hover:text-stone-100 transition">✕</button>
+        <div>
+          <h3 class="text-lg font-bold text-white">나만의 작업실 모니터</h3>
+          <p id="deskSubtitle" class="text-xs text-slate-400">재헌이 진행 중인 주요 작업 목록</p>
+        </div>
       </div>
-
-      <!-- 게시판 탭 -->
-      <div class="flex gap-2 my-3 border-b border-stone-700 pb-2">
-        <button id="tab-updates" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-600 text-white transition">최근 수정사항 (5)</button>
-        <button id="tab-events" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-stone-800 text-stone-400 hover:text-stone-200 transition">이벤트</button>
-        <button id="tab-news" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-stone-800 text-stone-400 hover:text-stone-200 transition">광장 뉴스</button>
+      <div class="space-y-3 my-6 max-h-[60vh] overflow-y-auto custom-scroll pr-1">
+        <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10 hover:border-brand-500 transition">
+          <div class="flex justify-between items-center mb-1">
+            <span class="font-bold text-sm text-indigo-300">인터랙티브 웹 하우스 프로젝트</span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono">진행 중</span>
+          </div>
+          <p class="text-xs text-slate-300">사용자가 직접 아바타를 조작해 가상 공간을 둘러보는 2.5D 인터랙티브 포트폴리오 웹앱.</p>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10">
+          <div class="flex justify-between items-center mb-1">
+            <span class="font-bold text-sm text-indigo-300">AI 기반 맞춤형 사운드스케이프</span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 font-mono">완료</span>
+          </div>
+          <p class="text-xs text-slate-300">날씨 및 시간에 따라 배경 음악 앰비언스를 자동 합성하는 브라우저 오디오 엔진 연구.</p>
+        </div>
       </div>
-
-      <!-- 탭 본문 영역 -->
-      <div id="tab-content" class="overflow-y-auto custom-scroll pr-1 flex-1 space-y-3">
-        <!-- JS로 동적 렌더링 -->
+      <div class="flex justify-end">
+        <button onclick="closeModal('modalDesk')" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-semibold text-xs text-white">확인 완료</button>
       </div>
     </div>
   </div>
 
+  <!-- Modal: Coffee Bar Interaction -->
+  <div id="modalKitchen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden">
+    <div class="glass-panel w-full max-w-md rounded-3xl p-6 sm:p-8 shadow-2xl relative text-center">
+      <button onclick="closeModal('modalKitchen')" class="absolute top-5 right-5 text-slate-400 hover:text-white text-lg p-2">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="w-16 h-16 mx-auto rounded-3xl bg-amber-500/20 text-amber-300 flex items-center justify-center text-3xl mb-4 animate-bounce">
+        <i class="fa-solid fa-mug-hot"></i>
+      </div>
+      <h3 class="text-xl font-bold text-white mb-2">원두를 갓 내린 드립 커피 ☕</h3>
+      <p class="text-xs text-slate-300 leading-relaxed mb-6">
+        "잠깐 휴식이 필요한 시간입니다.<br>
+        따뜻한 에티오피아 예가체프 향이 방 안에 은은하게 퍼집니다."
+      </p>
+      <div class="p-3 rounded-2xl bg-white/5 border border-white/10 text-xs text-amber-200/90 mb-6">
+        <i class="fa-solid fa-quote-left mr-1 opacity-50"></i>
+        좋은 코드는 충분한 커피와 좋은 휴식에서 시작됩니다.
+      </div>
+      <button onclick="closeModal('modalKitchen'); triggerCoffeeSteamEffect();" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm">
+        커피 마시고 활력 충전하기
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal: Cozy Bed (Rest & Time) -->
+  <div id="modalBed" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden">
+    <div class="glass-panel w-full max-w-md rounded-3xl p-6 sm:p-8 shadow-2xl relative text-center">
+      <button onclick="closeModal('modalBed')" class="absolute top-5 right-5 text-slate-400 hover:text-white text-lg p-2">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="w-16 h-16 mx-auto rounded-3xl bg-purple-500/20 text-purple-300 flex items-center justify-center text-3xl mb-4">
+        <i class="fa-solid fa-bed"></i>
+      </div>
+      <h3 class="text-xl font-bold text-white mb-2">포근한 침대</h3>
+      <p class="text-xs text-slate-300 leading-relaxed mb-6">
+        푹신한 오리털 이불과 베개가 놓여 있습니다.<br>
+        조명을 낮추고 밤 모드로 전환해볼까요?
+      </p>
+      <div class="grid grid-cols-2 gap-3 mb-6">
+        <button onclick="setTimeMood(0); closeModal('modalBed');" class="p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-amber-300 flex flex-col items-center gap-1">
+          <i class="fa-solid fa-sun text-lg"></i> 낮의 햇살 모드
+        </button>
+        <button onclick="setTimeMood(2); closeModal('modalBed');" class="p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-indigo-300 flex flex-col items-center gap-1">
+          <i class="fa-solid fa-moon text-lg"></i> 아늑한 비 내리는 밤
+        </button>
+      </div>
+      <button onclick="closeModal('modalBed')" class="w-full py-2.5 rounded-xl bg-white/10 text-slate-300 hover:text-white text-xs font-medium">닫기</button>
+    </div>
+  </div>
+
+  <!-- Modal: Record Player (Lo-Fi Music) -->
+  <div id="modalRecords" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden">
+    <div class="glass-panel w-full max-w-md rounded-3xl p-6 sm:p-8 shadow-2xl relative text-center">
+      <button onclick="closeModal('modalRecords')" class="absolute top-5 right-5 text-slate-400 hover:text-white text-lg p-2">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="w-16 h-16 mx-auto rounded-3xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center text-3xl mb-4">
+        <i class="fa-solid fa-compact-disc animate-spin" style="animation-duration: 8s;"></i>
+      </div>
+      <h3 class="text-xl font-bold text-white mb-1">빈티지 LP 턴테이블</h3>
+      <p class="text-xs text-slate-400 mb-6">브라우저 Web Audio API로 실시간 합성되는 로파이 칠 멜로디</p>
+      <div class="flex justify-center gap-4 mb-6">
+        <button id="modalMusicToggle" onclick="toggleMusic()" class="px-6 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm flex items-center gap-2">
+          <i class="fa-solid fa-play"></i>
+          <span id="modalMusicText">음악 재생하기</span>
+        </button>
+      </div>
+      <p class="text-[11px] text-slate-500">외부 mp3 파일 없이 코드로 직접 생성하는 무손실 사운드스케이프입니다.</p>
+    </div>
+  </div>
+
+  <!-- Outdoor Modal 1: Fountain (Coin Toss) -->
+  <div id="modalFountain" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden">
+    <div class="glass-panel w-full max-w-md rounded-3xl p-6 sm:p-8 shadow-2xl relative text-center">
+      <button onclick="closeModal('modalFountain')" class="absolute top-5 right-5 text-slate-400 hover:text-white text-lg p-2">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="w-16 h-16 mx-auto rounded-3xl bg-cyan-500/20 text-cyan-300 flex items-center justify-center text-3xl mb-4 animate-pulse">
+        <i class="fa-solid fa-droplet"></i>
+      </div>
+      <h3 class="text-xl font-bold text-white mb-2">광장 소원 분수대</h3>
+      <p class="text-xs text-slate-300 leading-relaxed mb-6">
+        맑은 물이 솟구치는 돌 분수대입니다.<br>
+        반짝이는 소원 동전을 던져볼까요?
+      </p>
+      <div id="fountainWishCount" class="text-xs text-amber-300 mb-6 bg-white/5 py-2 px-4 rounded-xl inline-block border border-white/10">
+        ✨ 지금까지 던진 행운의 동전: <span id="coinCountDisplay" class="font-bold text-sm">0</span>개
+      </div>
+      <div class="flex gap-2">
+        <button onclick="tossCoinInFountain()" class="flex-1 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-sm transition">
+          동전 던지며 소원 빌기 🪙
+        </button>
+        <button onclick="closeModal('modalFountain')" class="px-4 py-3 rounded-xl bg-white/10 text-slate-300 hover:text-white text-xs font-semibold">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Outdoor Modal 2: Town Notice Board -->
+  <div id="modalNotice" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden">
+    <div class="glass-panel w-full max-w-xl rounded-3xl p-6 sm:p-8 shadow-2xl relative border border-white/20">
+      <button onclick="closeModal('modalNotice')" class="absolute top-5 right-5 text-slate-400 hover:text-white text-lg p-2">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <!-- Modal Header -->
+      <div class="flex items-center gap-3 mb-5">
+        <div class="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-300 flex items-center justify-center text-xl">
+          <i class="fa-solid fa-clipboard-list"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-white">마을 광장 알림 게시판</h3>
+          <p class="text-xs text-slate-400">최근 패치노트와 마을 소식을 확인하세요</p>
+        </div>
+      </div>
+
+      <!-- Tab Buttons -->
+      <div class="flex gap-2 border-b border-white/10 pb-3 mb-4">
+        <button id="tabBtnUpdates" onclick="switchNoticeTab('updates')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-amber-500 text-slate-950 transition shadow-sm">
+          <i class="fa-solid fa-wrench mr-1"></i> 최근 수정사항 (5)
+        </button>
+        <button id="tabBtnEvents" onclick="switchNoticeTab('events')" class="px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-300 hover:bg-white/10 transition">
+          <i class="fa-solid fa-calendar-star mr-1"></i> 이벤트
+        </button>
+        <button id="tabBtnNews" onclick="switchNoticeTab('news')" class="px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-300 hover:bg-white/10 transition">
+          <i class="fa-solid fa-newspaper mr-1"></i> 광장 뉴스
+        </button>
+      </div>
+
+      <!-- Tab Content 1: Updates (Strictly Top 5, newest first) -->
+      <div id="noticeTabUpdates" class="space-y-2.5 my-3 max-h-[55vh] overflow-y-auto custom-scroll pr-1">
+        <!-- 1 (Latest) -->
+        <div class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30">
+          <div class="flex justify-between items-center mb-1">
+            <span class="font-bold text-xs text-amber-300 flex items-center gap-1.5">
+              <span class="px-1.5 py-0.5 rounded bg-amber-400/20 text-[10px] font-mono text-amber-200">v1.6</span>
+              캐릭터 커스텀 & 영구 저장 시스템
+            </span>
+            <span class="text-[10px] text-amber-300/80 font-mono">NEW</span>
+          </div>
+          <p class="text-xs text-slate-300">내 이름 설정과 남/여 아바타 외형 선택이 추가되었으며, 브라우저를 껐다 켜도 데이터가 유지됩니다.</p>
+        </div>
+
+        <!-- 2 -->
+        <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10">
+          <div class="flex justify-between items-center mb-1">
+            <span class="font-bold text-xs text-indigo-300 flex items-center gap-1.5">
+              <span class="px-1.5 py-0.5 rounded bg-indigo-400/20 text-[10px] font-mono text-indigo-200">v1.5</span>
+              마을 광장 및 야외 맵 오픈
+            </span>
+            <span class="text-[10px] text-slate-400 font-mono">패치</span>
+          </div>
+          <p class="text-xs text-slate-300">방 출입문으로 연결되는 야외 산책로 개방! 소원 분수대 동전 던지기, 벤치 휴식, 화단 정원이 추가되었습니다.</p>
+        </div>
+
+        <!-- 3 -->
+        <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10">
+          <div class="flex justify-between items-center mb-1">
+            <span class="font-bold text-xs text-indigo-300 flex items-center gap-1.5">
+              <span class="px-1.5 py-0.5 rounded bg-indigo-400/20 text-[10px] font-mono text-indigo-200">v1.4</span>
+              마을 공지 게시판 설치
+            </span>
+            <span class="text-[10px] text-slate-400 font-mono">기능</span>
+          </div>
+          <p class="text-xs text-slate-300">광장 산책로에 최신 변경 내역과 소식을 열람할 수 있는 마을 게시판 및 탭 시스템이 구축되었습니다.</p>
+        </div>
+
+        <!-- 4 -->
+        <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10">
+          <div class="flex justify-between items-center mb-1">
+            <span class="font-bold text-xs text-indigo-300 flex items-center gap-1.5">
+              <span class="px-1.5 py-0.5 rounded bg-indigo-400/20 text-[10px] font-mono text-indigo-200">v1.3</span>
+              충돌 감지 및 슬라이딩 이동 물리 개선
+            </span>
+            <span class="text-[10px] text-slate-400 font-mono">물리</span>
+          </div>
+          <p class="text-xs text-slate-300">벽면이나 대각선 모서리에 끼이지 않고 장애물 표면을 따라 부드럽게 미끄러지도록 이동 엔진을 고도화했습니다.</p>
+        </div>
+
+        <!-- 5 -->
+        <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10">
+          <div class="flex justify-between items-center mb-1">
+            <span class="font-bold text-xs text-indigo-300 flex items-center gap-1.5">
+              <span class="px-1.5 py-0.5 rounded bg-indigo-400/20 text-[10px] font-mono text-indigo-200">v1.2</span>
+              실내 가구 인터랙션 & 사운드 추가
+            </span>
+            <span class="text-[10px] text-slate-400 font-mono">엔진</span>
+          </div>
+          <p class="text-xs text-slate-300">작업 데스크 프로젝트 창, 브라우저 실시간 Web Audio 신디사이저 턴테이블, 모락모락 커피 스팀 효과가 추가되었습니다.</p>
+        </div>
+      </div>
+
+      <!-- Tab Content 2: Events (Placeholder for future) -->
+      <div id="noticeTabEvents" class="hidden my-3 max-h-[55vh] overflow-y-auto custom-scroll pr-1 text-center py-10">
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-sky-500/20 text-sky-300 flex items-center justify-center text-2xl mb-3">
+          <i class="fa-solid fa-gift"></i>
+        </div>
+        <h4 class="text-sm font-bold text-white mb-1">진행 예정 이벤트 준비 중</h4>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          광장 보물찾기 및 계절 특별 이벤트가 기획 중입니다.<br>다음 업데이트를 기대해주세요!
+        </p>
+      </div>
+
+      <!-- Tab Content 3: News (Placeholder for future) -->
+      <div id="noticeTabNews" class="hidden my-3 max-h-[55vh] overflow-y-auto custom-scroll pr-1 text-center py-10">
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center text-2xl mb-3">
+          <i class="fa-solid fa-bullhorn"></i>
+        </div>
+        <h4 class="text-sm font-bold text-white mb-1">광장 소식란 준비 중</h4>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          주민 한 줄 방명록 및 마을의 새로운 소식이 이곳에 게재될 예정입니다.
+        </p>
+      </div>
+
+      <div class="mt-4 pt-3 border-t border-white/10 flex justify-end">
+        <button onclick="closeModal('modalNotice')" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition">확인 완료</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Outdoor Modal 3: Park Bench Rest -->
+  <div id="modalBench" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden">
+    <div class="glass-panel w-full max-w-md rounded-3xl p-6 sm:p-8 shadow-2xl relative text-center">
+      <button onclick="closeModal('modalBench')" class="absolute top-5 right-5 text-slate-400 hover:text-white text-lg p-2">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="w-16 h-16 mx-auto rounded-3xl bg-amber-600/20 text-amber-300 flex items-center justify-center text-3xl mb-4">
+        <i class="fa-solid fa-chair"></i>
+      </div>
+      <h3 class="text-xl font-bold text-white mb-2">나무 그늘 아래 벤치</h3>
+      <p class="text-xs text-slate-300 leading-relaxed mb-6">
+        "불어오는 시원한 바람을 맞으며 잠시 벤치에 앉아 쉬어갑니다.<br>
+        나뭇잎 사각거리는 소리가 마음을 평화롭게 해줍니다." 🍃
+      </p>
+      <button onclick="closeModal('modalBench'); triggerHeartBubble();" class="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm">
+        상쾌하게 한숨 돌리기
+      </button>
+    </div>
+  </div>
+
+  <!-- Outdoor Modal 4: Flower Garden -->
+  <div id="modalFlowers" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden">
+    <div class="glass-panel w-full max-w-md rounded-3xl p-6 sm:p-8 shadow-2xl relative text-center">
+      <button onclick="closeModal('modalFlowers')" class="absolute top-5 right-5 text-slate-400 hover:text-white text-lg p-2">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="w-16 h-16 mx-auto rounded-3xl bg-pink-500/20 text-pink-300 flex items-center justify-center text-3xl mb-4">
+        <i class="fa-solid fa-spa"></i>
+      </div>
+      <h3 class="text-xl font-bold text-white mb-2">알록달록 화단 정원</h3>
+      <p class="text-xs text-slate-300 leading-relaxed mb-6">
+        튤립과 라벤더가 만개해 싱그러운 꽃향기가 가득합니다.<br>
+        꽃잎들이 바람을 타고 흩날립니다. 🌸
+      </p>
+      <button onclick="closeModal('modalFlowers'); triggerFlowerPetals();" class="w-full py-3 rounded-xl bg-pink-500 hover:bg-pink-400 text-slate-950 font-bold text-sm">
+        꽃향기 맡아보기
+      </button>
+    </div>
+  </div>
+
+  <!-- Help & Intro Modal -->
+  <div id="modalHelp" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden">
+    <div class="glass-panel w-full max-w-md rounded-3xl p-6 sm:p-8 shadow-2xl relative">
+      <button onclick="closeModal('modalHelp')" class="absolute top-5 right-5 text-slate-400 hover:text-white text-lg p-2">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+        <i class="fa-regular fa-compass text-amber-400"></i> 하우스 조작 가이드
+      </h3>
+      <div class="space-y-3 text-xs text-slate-300 leading-relaxed mb-6">
+        <div class="flex items-start gap-2.5">
+          <span class="w-6 h-6 rounded-lg bg-amber-400/20 text-amber-300 flex items-center justify-center shrink-0">1</span>
+          <p><strong>클릭 & 터치 이동:</strong> 방 안의 바닥 아무 곳이나 클릭하면 캐릭터가 자연스럽게 해당 위치로 걸어갑니다.</p>
+        </div>
+        <div class="flex items-start gap-2.5">
+          <span class="w-6 h-6 rounded-lg bg-amber-400/20 text-amber-300 flex items-center justify-center shrink-0">2</span>
+          <p><strong>가구 상호작용:</strong> 컴퓨터 책상, 커피 머신, 침대, LP 턴테이블 근처로 가면 상호작용 버튼이 활성화됩니다.</p>
+        </div>
+        <div class="flex items-start gap-2.5">
+          <span class="w-6 h-6 rounded-lg bg-amber-400/20 text-amber-300 flex items-center justify-center shrink-0">3</span>
+          <p><strong>키보드 지원:</strong> 키보드 <kbd class="px-1.5 py-0.5 rounded bg-white/10 font-mono text-amber-300">WASD</kbd> 또는 <kbd class="px-1.5 py-0.5 rounded bg-white/10 font-mono text-amber-300">방향키</kbd>로도 직접 캐릭터를 조작할 수 있습니다.</p>
+        </div>
+      </div>
+      <button onclick="closeModal('modalHelp')" class="w-full py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs">알겠습니다!</button>
+    </div>
+  </div>
+
+  <!-- ================= CANVAS GAME ENGINE SCRIPT ================= -->
   <script>
-    // --- 1. 유저 프로필 & 스토리지 관리 ---
-    const STORAGE_KEY = 'cozy_room_profile_v1';
+    const canvas = document.getElementById('roomCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // UI elements
+    const zoneBadge = document.getElementById('zoneBadge');
+    const mapTitle = document.getElementById('mapTitle');
+    const deskSubtitle = document.getElementById('deskSubtitle');
+    const zoneSubDesc = document.getElementById('zoneSubDesc');
+    const zoneMainIcon = document.getElementById('zoneMainIcon');
+    const doorQuickBtn = document.getElementById('doorQuickBtn');
+    const doorQuickIcon = document.getElementById('doorQuickIcon');
+    const doorQuickText = document.getElementById('doorQuickText');
+    const sceneFadeOverlay = document.getElementById('sceneFadeOverlay');
+    const shortcutsContainer = document.getElementById('shortcutsContainer');
+
+    const interactionPrompt = document.getElementById('interactionPrompt');
+    const promptIcon = document.getElementById('promptIcon');
+    const promptLabel = document.getElementById('promptLabel');
+    const interactionBtn = document.getElementById('interactionBtn');
+    const timeMoodBtn = document.getElementById('timeMoodBtn');
+    const timeMoodIcon = document.getElementById('timeMoodIcon');
+    const timeMoodText = document.getElementById('timeMoodText');
+    const musicToggleBtn = document.getElementById('musicToggleBtn');
+    const musicIcon = document.getElementById('musicIcon');
+    const helpBtn = document.getElementById('helpBtn');
+
+    // Canvas Virtual Dimensions
+    const ROOM_WIDTH = 1000;
+    const ROOM_HEIGHT = 700;
+    let scale = 1;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    // SCENE STATE: 'room' or 'plaza'
+    let currentScene = 'room';
+    let isTransitioning = false;
+    let coinCount = 0;
+
+    // Time of day modes: 0: Day, 1: Sunset, 2: Rainy Night
+    let currentMood = 0;
+    const moods = [
+      { name: '오후 햇살', icon: 'fa-sun', color: '#fffae8', ambient: 'rgba(255, 230, 180, 0.08)' },
+      { name: '아늑한 노을', icon: 'fa-cloud-sun', color: '#ffb27d', ambient: 'rgba(235, 110, 60, 0.16)' },
+      { name: '비 내리는 밤', icon: 'fa-moon', color: '#6882b8', ambient: 'rgba(15, 20, 50, 0.35)' }
+    ];
+
+    // ================= USER PROFILE & LOCALSTORAGE =================
+    const STORAGE_KEY = 'cozy_room_profile_v2';
     let userProfile = {
       name: '재헌',
-      gender: 'male',
-      isNew: true
+      gender: 'male' // 'male' or 'female'
     };
+    let tempSelectedGender = 'male';
 
-    function loadProfile() {
+    function loadUserProfile() {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
-          userProfile = { ...userProfile, ...JSON.parse(saved), isNew: false };
+          userProfile = JSON.parse(saved);
+          applyUserProfile();
+          return true;
         }
       } catch (e) {
-        console.error('스토리지 로드 실패', e);
+        console.error('로컬스토리지 로드 오류', e);
+      }
+      return false;
+    }
+
+    function applyUserProfile() {
+      updateHUDTheme();
+      if (deskSubtitle) {
+        deskSubtitle.textContent = `${userProfile.name}이(가) 진행 중인 주요 작업 목록`;
+      }
+      // Character costume/colors update based on gender
+      if (userProfile.gender === 'female') {
+        player.color = '#ec4899'; // Cozy Rose Pink
+        player.hairColor = '#451a03'; // Deep brown wavy hair
+      } else {
+        player.color = '#3b82f6'; // Clean Navy Blue
+        player.hairColor = '#1e1b24'; // Classic Dark Hair
+      }
+    }
+
+    function openProfileModal(isFirstTime = false) {
+      const modal = document.getElementById('modalProfile');
+      const input = document.getElementById('profileNameInput');
+      const closeBtn = document.getElementById('profileCloseBtn');
+
+      input.value = userProfile.name;
+      selectGender(userProfile.gender);
+
+      if (isFirstTime) {
+        closeBtn.classList.add('hidden');
+      } else {
+        closeBtn.classList.remove('hidden');
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function selectGender(g) {
+      tempSelectedGender = g;
+      const maleBtn = document.getElementById('genderMaleBtn');
+      const femaleBtn = document.getElementById('genderFemaleBtn');
+      const icon = document.getElementById('profileAvatarIcon');
+
+      if (g === 'male') {
+        maleBtn.className = 'p-3.5 rounded-2xl border transition flex flex-col items-center gap-1 border-amber-500/50 bg-amber-500/20 text-amber-200';
+        femaleBtn.className = 'p-3.5 rounded-2xl border transition flex flex-col items-center gap-1 border-white/10 bg-white/5 text-slate-300 hover:bg-white/10';
+        icon.textContent = '👦';
+      } else {
+        femaleBtn.className = 'p-3.5 rounded-2xl border transition flex flex-col items-center gap-1 border-pink-500/50 bg-pink-500/20 text-pink-200';
+        maleBtn.className = 'p-3.5 rounded-2xl border transition flex flex-col items-center gap-1 border-white/10 bg-white/5 text-slate-300 hover:bg-white/10';
+        icon.textContent = '👧';
       }
     }
 
     function saveProfile() {
+      const input = document.getElementById('profileNameInput');
+      const newName = input.value.trim() || '여행자';
+      userProfile.name = newName;
+      userProfile.gender = tempSelectedGender;
+
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(userProfile));
       } catch (e) {
-        console.error('스토리지 저장 실패', e);
+        console.error('로컬스토리지 저장 실패', e);
       }
-      updateUIHeader();
+
+      applyUserProfile();
+      closeModal('modalProfile');
     }
 
-    function updateUIHeader() {
-      const titleEl = document.getElementById('title-display');
-      const avatarDesc = document.getElementById('avatar-desc');
-      const previewIcon = document.getElementById('preview-avatar-icon');
-      
-      const genderName = userProfile.gender === 'male' ? '남성' : '여성';
-      if (titleEl) titleEl.textContent = `${userProfile.name}의 코지 스튜디오`;
-      if (avatarDesc) avatarDesc.textContent = `${userProfile.name} (${genderName})`;
-      if (previewIcon) previewIcon.textContent = userProfile.gender === 'male' ? '👦' : '👧';
-    }
-
-    // --- 2. 게임 맵 및 렌더링 엔진 ---
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const MAP_W = 960;
-    const MAP_H = 640;
-
-    let currentScene = 'indoor'; // 'indoor' | 'outdoor'
-    let isTransitioning = false;
-
-    // 아바타 상태
+    // Character State
     const player = {
-      x: 480,
-      y: 340,
-      targetX: 480,
-      targetY: 340,
-      speed: 4.0,
-      isMoving: false,
-      dir: 'down', // 'down', 'up', 'left', 'right'
-      frame: 0,
-      walkTimer: 0,
-      clickEffect: null
+      x: 500,
+      y: 450,
+      targetX: 500,
+      targetY: 450,
+      speed: 4.5,
+      radius: 12,
+      direction: 'down',
+      moving: false,
+      stepCycle: 0,
+      color: '#3b82f6',
+      hairColor: '#1e1b24',
+      faceColor: '#ffdbac'
     };
 
-    // 파티클 시스템
-    let particles = [];
-
-    // 실내 가구 및 장애물 충돌 박스
-    const indoorColliders = [
-      { name: '작업 데스크', x: 120, y: 120, w: 200, h: 90, type: 'desk' },
-      { name: '커피 바', x: 640, y: 120, w: 200, h: 90, type: 'coffee' },
-      { name: '소파', x: 380, y: 240, w: 200, h: 100, type: 'sofa' },
-      { name: '침대', x: 120, y: 410, w: 160, h: 140, type: 'bed' },
-      { name: '턴테이블', x: 690, y: 440, w: 130, h: 90, type: 'music' }
-    ];
-
-    // 야외 가구 및 장애물
-    const outdoorColliders = [
-      { name: '소원 분수대', x: 420, y: 230, w: 120, h: 120, type: 'fountain' },
-      { name: '공지 게시판', x: 230, y: 140, w: 110, h: 70, type: 'board' },
-      { name: '정원 벤치', x: 630, y: 170, w: 130, h: 65, type: 'bench' },
-      { name: '꽃 화단 정원', x: 650, y: 390, w: 170, h: 110, type: 'flowers' }
-    ];
-
-    // 출입문 트리거
-    const indoorDoor = { x: 440, y: 550, w: 80, h: 50 };
-    const outdoorHomeDoor = { x: 440, y: 50, w: 80, h: 50 };
-
-    // 키보드 조작
+    // Particles & ripples
+    let clickRipple = null;
+    const particles = [];
     const keys = {};
-    window.addEventListener('keydown', e => {
+
+    // ================= MAP DEFINITIONS =================
+    // 1. INDOOR ROOM MAP
+    const roomScene = {
+      bounds: { minX: 80, maxX: ROOM_WIDTH - 80, minY: 110, maxY: ROOM_HEIGHT - 60 },
+      doorZone: { x: 450, y: ROOM_HEIGHT - 70, w: 100, h: 30, targetScene: 'plaza', spawn: { x: 500, y: 190, dir: 'down' } },
+      furnitures: [
+        {
+          id: 'desk',
+          name: '작업용 컴퓨터 데스크',
+          x: 100, y: 110, w: 190, h: 90,
+          color: '#805030', topColor: '#96603a',
+          type: 'desk', interactive: true, zone: '작업 공간',
+          prompt: '나만의 작업실 모니터 보기',
+          icon: '<i class="fa-solid fa-laptop-code"></i>',
+          action: () => openModal('modalDesk')
+        },
+        {
+          id: 'kitchen',
+          name: '커피 아일랜드 바',
+          x: 710, y: 110, w: 190, h: 95,
+          color: '#654321', topColor: '#dfd7cc',
+          type: 'kitchen', interactive: true, zone: '미니 카페 & 키친',
+          prompt: '원두 드립 커피 내리기',
+          icon: '<i class="fa-solid fa-mug-hot"></i>',
+          action: () => openModal('modalKitchen')
+        },
+        {
+          id: 'bed',
+          name: '포근한 침대',
+          x: 100, y: 440, w: 150, h: 170,
+          color: '#475569', topColor: '#e2e8f0',
+          type: 'bed', interactive: true, zone: '휴식 침실',
+          prompt: '침대에서 휴식하기 / 시간 변경',
+          icon: '<i class="fa-solid fa-bed"></i>',
+          action: () => openModal('modalBed')
+        },
+        {
+          id: 'records',
+          name: '턴테이블 & 책장',
+          x: 730, y: 450, w: 170, h: 150,
+          color: '#5c3a21', topColor: '#784c28',
+          type: 'records',
+          interactive: true, zone: '뮤직 라운지',
+          prompt: '로파이 턴테이블 켜기',
+          icon: '<i class="fa-solid fa-compact-disc"></i>',
+          action: () => openModal('modalRecords')
+        },
+        {
+          id: 'sofa',
+          name: '거실 소파',
+          x: 410, y: 250, w: 180, h: 75,
+          color: '#334155', topColor: '#475569',
+          type: 'sofa', interactive: false, zone: '거실 라운지'
+        },
+        {
+          id: 'table',
+          name: '우드 티 테이블',
+          x: 440, y: 345, w: 120, h: 55,
+          color: '#a16207', topColor: '#ca8a04',
+          type: 'table', interactive: false, zone: '거실 라운지'
+        }
+      ]
+    };
+
+    // 2. OUTDOOR TOWN SQUARE PLAZA MAP
+    const plazaScene = {
+      bounds: { minX: 60, maxX: ROOM_WIDTH - 60, minY: 70, maxY: ROOM_HEIGHT - 60 },
+      doorZone: { x: 450, y: 80, w: 100, h: 40, targetScene: 'room', spawn: { x: 500, y: ROOM_HEIGHT - 120, dir: 'up' } },
+      furnitures: [
+        {
+          id: 'house_porch',
+          name: '집 현관문',
+          x: 420, y: 60, w: 160, h: 65,
+          color: '#475569', topColor: '#64748b',
+          type: 'porch', interactive: true, zone: '현관 입구',
+          prompt: '코지 스튜디오 실내로 들어가기',
+          icon: '<i class="fa-solid fa-door-open"></i>',
+          action: () => transitionToScene('room')
+        },
+        {
+          id: 'fountain',
+          name: '소원 분수대',
+          x: 420, y: 310, w: 160, h: 120,
+          color: '#38bdf8', topColor: '#0284c7',
+          type: 'fountain', interactive: true, zone: '중앙 분수대',
+          prompt: '소원 분수대에 동전 던지기',
+          icon: '<i class="fa-solid fa-droplet"></i>',
+          action: () => openModal('modalFountain')
+        },
+        {
+          id: 'bench_left',
+          name: '나무 그늘 벤치',
+          x: 140, y: 330, w: 100, h: 50,
+          color: '#78350f', topColor: '#92400e',
+          type: 'bench', interactive: true, zone: '서쪽 산책로',
+          prompt: '벤치에 앉아 쉬어가기',
+          icon: '<i class="fa-solid fa-chair"></i>',
+          action: () => openModal('modalBench')
+        },
+        {
+          id: 'tree_left',
+          name: '단풍나무',
+          x: 130, y: 150, w: 90, h: 90,
+          type: 'tree', interactive: false, zone: '서쪽 정원'
+        },
+        {
+          id: 'flower_garden',
+          name: '알록달록 화단',
+          x: 740, y: 310, w: 140, h: 100,
+          type: 'garden', interactive: true, zone: '동쪽 화단',
+          prompt: '꽃향기 맡아보기',
+          icon: '<i class="fa-solid fa-spa"></i>',
+          action: () => openModal('modalFlowers')
+        },
+        {
+          id: 'notice_board',
+          name: '마을 안내 게시판',
+          x: 160, y: 490, w: 90, h: 60,
+          type: 'notice', interactive: true, zone: '남쪽 광장로',
+          prompt: '마을 공지 게시판 보기',
+          icon: '<i class="fa-solid fa-clipboard-list"></i>',
+          action: () => openModal('modalNotice')
+        },
+        {
+          id: 'tree_right',
+          name: '푸른 정원수',
+          x: 760, y: 160, w: 90, h: 90,
+          type: 'tree', interactive: false, zone: '동쪽 정원'
+        }
+      ]
+    };
+
+    function getCurrentSceneData() {
+      return currentScene === 'room' ? roomScene : plazaScene;
+    }
+
+    let activeInteractive = null;
+
+    // ================= RESIZE & COORDINATES =================
+    function resizeCanvas() {
+      const container = canvas.parentElement;
+      const rect = container.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+
+      const scaleX = canvas.width / ROOM_WIDTH;
+      const scaleY = canvas.height / ROOM_HEIGHT;
+      scale = Math.min(scaleX, scaleY) * 0.95;
+
+      offsetX = (canvas.width - ROOM_WIDTH * scale) / 2;
+      offsetY = (canvas.height - ROOM_HEIGHT * scale) / 2;
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    function screenToRoom(screenX, screenY) {
+      const rect = canvas.getBoundingClientRect();
+      const relativeX = screenX - rect.left;
+      const relativeY = screenY - rect.top;
+      return {
+        x: (relativeX - offsetX) / scale,
+        y: (relativeY - offsetY) / scale
+      };
+    }
+
+    // ================= SCENE TRANSITION LOGIC =================
+    function transitionToScene(newScene) {
+      if (isTransitioning || currentScene === newScene) return;
+      isTransitioning = true;
+      sceneFadeOverlay.classList.remove('opacity-0');
+      sceneFadeOverlay.classList.add('opacity-100');
+
+      setTimeout(() => {
+        const sourceData = getCurrentSceneData();
+        currentScene = newScene;
+
+        const targetSpawn = sourceData.doorZone.spawn;
+        player.x = targetSpawn.x;
+        player.y = targetSpawn.y;
+        player.targetX = targetSpawn.x;
+        player.targetY = targetSpawn.y;
+        player.direction = targetSpawn.dir;
+        player.moving = false;
+
+        updateHUDTheme();
+        updateShortcutsUI();
+
+        setTimeout(() => {
+          sceneFadeOverlay.classList.remove('opacity-100');
+          sceneFadeOverlay.classList.add('opacity-0');
+          isTransitioning = false;
+        }, 150);
+      }, 400);
+    }
+
+    function toggleMapScene() {
+      transitionToScene(currentScene === 'room' ? 'plaza' : 'room');
+    }
+
+    function updateHUDTheme() {
+      if (currentScene === 'room') {
+        mapTitle.textContent = `${userProfile.name}의 코지 스튜디오`;
+        zoneSubDesc.textContent = '바닥을 클릭하거나 아래 출입문으로 나가보세요';
+        zoneMainIcon.className = 'fa-solid fa-house-chimney-window';
+        doorQuickIcon.className = 'fa-solid fa-door-open text-amber-400';
+        doorQuickText.textContent = '밖으로 나가기';
+        zoneBadge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 font-medium';
+      } else {
+        mapTitle.textContent = '햇살 가득한 마을 광장';
+        zoneSubDesc.textContent = '분수대와 화단을 산책하거나 집으로 돌아가세요';
+        zoneMainIcon.className = 'fa-solid fa-tree';
+        doorQuickIcon.className = 'fa-solid fa-house text-emerald-400';
+        doorQuickText.textContent = '방으로 들어가기';
+        zoneBadge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 font-medium';
+      }
+    }
+
+    function updateShortcutsUI() {
+      if (currentScene === 'room') {
+        shortcutsContainer.innerHTML = `
+          <button onclick="teleportTo('desk')" class="px-3 py-1.5 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-white/10 transition">💻 데스크</button>
+          <button onclick="teleportTo('kitchen')" class="px-3 py-1.5 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-white/10 transition">☕ 커피 바</button>
+          <button onclick="teleportTo('bed')" class="px-3 py-1.5 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-white/10 transition">🛏️ 침대</button>
+          <button onclick="teleportTo('door')" class="px-3 py-1.5 rounded-xl text-xs text-amber-300 hover:bg-amber-500/20 transition">🚪 출입문</button>
+        `;
+      } else {
+        shortcutsContainer.innerHTML = `
+          <button onclick="teleportTo('fountain')" class="px-3 py-1.5 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-white/10 transition">⛲ 분수대</button>
+          <button onclick="teleportTo('bench_left')" class="px-3 py-1.5 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-white/10 transition">🪑 그늘 벤치</button>
+          <button onclick="teleportTo('flower_garden')" class="px-3 py-1.5 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-white/10 transition">🌸 화단</button>
+          <button onclick="teleportTo('house_porch')" class="px-3 py-1.5 rounded-xl text-xs text-sky-300 hover:bg-sky-500/20 transition">🏠 집 입구</button>
+        `;
+      }
+    }
+
+    // ================= INPUT HANDLERS =================
+    function setTarget(screenX, screenY) {
+      if (isTransitioning) return;
+      const pos = screenToRoom(screenX, screenY);
+      const sceneData = getCurrentSceneData();
+
+      const targetX = Math.max(sceneData.bounds.minX, Math.min(sceneData.bounds.maxX, pos.x));
+      const targetY = Math.max(sceneData.bounds.minY, Math.min(sceneData.bounds.maxY, pos.y));
+
+      player.targetX = targetX;
+      player.targetY = targetY;
+
+      clickRipple = { x: targetX, y: targetY, radius: 3, alpha: 1 };
+
+      for (let i = 0; i < 5; i++) {
+        particles.push({
+          x: targetX,
+          y: targetY,
+          vx: (Math.random() - 0.5) * 2,
+          vy: (Math.random() - 0.5) * 2,
+          life: 1,
+          color: currentScene === 'room' ? '#fbbf24' : '#38bdf8'
+        });
+      }
+    }
+
+    canvas.addEventListener('mousedown', (e) => setTarget(e.clientX, e.clientY));
+    canvas.addEventListener('touchstart', (e) => {
+      if (e.touches.length > 0) setTarget(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+
+    window.addEventListener('keydown', (e) => {
       keys[e.key.toLowerCase()] = true;
+      if (e.key === ' ' || e.key.toLowerCase() === 'e') {
+        if (activeInteractive) {
+          activeInteractive.action();
+          e.preventDefault();
+        }
+      }
     });
-    window.addEventListener('keyup', e => {
+
+    window.addEventListener('keyup', (e) => {
       keys[e.key.toLowerCase()] = false;
     });
 
-    // --- 3. 오디오 신디사이저 (BGM) ---
-    let audioCtx = null;
-    let isPlayingBgm = false;
-    let bgmInterval = null;
+    // ================= COLLISION DETECTION =================
+    function checkCollision(x, y, radius) {
+      const sceneData = getCurrentSceneData();
+      const bounds = sceneData.bounds;
 
-    function initAudio() {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
-    }
-
-    function playChord() {
-      if (!audioCtx || !isPlayingBgm) return;
-      const chords = [
-        [261.63, 329.63, 392.00, 493.88], // Cmaj7
-        [220.00, 261.63, 329.63, 392.00], // Am7
-        [174.61, 220.00, 261.63, 329.63], // Fmaj7
-        [196.00, 246.94, 293.66, 349.23]  // G7
-      ];
-      const chord = chords[Math.floor(Math.random() * chords.length)];
-      const now = audioCtx.currentTime;
-
-      chord.forEach(freq => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(freq, now);
-        
-        gain.gain.setValueAtTime(0.001, now);
-        gain.gain.linearRampToValueAtTime(0.03, now + 0.3);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.5);
-
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(now);
-        osc.stop(now + 2.6);
-      });
-    }
-
-    function toggleBgm() {
-      initAudio();
-      isPlayingBgm = !isPlayingBgm;
-      const btn = document.getElementById('music-btn');
-      const icon = document.getElementById('music-icon');
-      if (isPlayingBgm) {
-        btn.classList.add('bg-amber-600', 'text-white');
-        icon.textContent = '🔊';
-        showToast('🎵 칠한 로파이 신스 BGM이 재생됩니다.');
-        playChord();
-        bgmInterval = setInterval(playChord, 3000);
-      } else {
-        btn.classList.remove('bg-amber-600', 'text-white');
-        icon.textContent = '🎵';
-        showToast('BGM이 정지되었습니다.');
-        clearInterval(bgmInterval);
-      }
-    }
-
-    // --- 4. 충돌 및 이동 처리 ---
-    function checkCollision(x, y) {
-      const colliders = currentScene === 'indoor' ? indoorColliders : outdoorColliders;
-      const r = 16; // 캐릭터 충돌 반지름
-      
-      // 방 테두리 벽 충돌
-      if (currentScene === 'indoor') {
-        if (x < 70 || x > MAP_W - 70 || y < 90 || y > MAP_H - 70) {
-          // 남쪽 문 통과는 예외
-          if (!(x >= indoorDoor.x && x <= indoorDoor.x + indoorDoor.w && y > MAP_H - 85)) {
-            return true;
-          }
-        }
-      } else {
-        // 야외 외곽
-        if (x < 60 || x > MAP_W - 60 || y < 60 || y > MAP_H - 60) {
-          // 북쪽 집 문 통과는 예외
-          if (!(x >= outdoorHomeDoor.x && x <= outdoorHomeDoor.x + outdoorHomeDoor.w && y < 75)) {
-            return true;
-          }
-        }
+      if (x - radius < bounds.minX || x + radius > bounds.maxX ||
+          y - radius < bounds.minY || y + radius > bounds.maxY) {
+        return true;
       }
 
-      // 가구 박스 충돌
-      for (let c of colliders) {
-        const margin = 10;
-        if (x > c.x - margin && x < c.x + c.w + margin &&
-            y > c.y - margin && y < c.y + c.h + margin) {
+      for (const item of sceneData.furnitures) {
+        if (item.type === 'porch') continue;
+
+        const inset = 6;
+        const boxLeft = item.x + inset;
+        const boxRight = item.x + item.w - inset;
+        const boxTop = item.y + inset;
+        const boxBottom = item.y + item.h - inset;
+
+        if (
+          x + radius > boxLeft &&
+          x - radius < boxRight &&
+          y + radius > boxTop &&
+          y - radius < boxBottom
+        ) {
           return true;
         }
       }
       return false;
     }
 
-    function switchScene(target) {
+    // ================= MOVEMENT & DOOR TRIGGER =================
+    function updatePlayer() {
       if (isTransitioning) return;
-      isTransitioning = true;
-      const overlay = document.getElementById('fade-overlay');
-      overlay.style.opacity = '1';
+      const sceneData = getCurrentSceneData();
 
-      setTimeout(() => {
-        currentScene = target;
-        const iconEl = document.getElementById('map-icon');
-        const badgeEl = document.getElementById('location-badge');
-        const toggleBtn = document.getElementById('scene-toggle-btn');
+      const door = sceneData.doorZone;
+      if (
+        player.x >= door.x && player.x <= door.x + door.w &&
+        player.y >= door.y && player.y <= door.y + door.h
+      ) {
+        transitionToScene(door.targetScene);
+        return;
+      }
 
-        if (currentScene === 'outdoor') {
-          player.x = 480;
-          player.y = 110;
-          player.targetX = 480;
-          player.targetY = 110;
-          player.dir = 'down';
-          iconEl.textContent = '⛲';
-          badgeEl.textContent = '마을 광장';
-          badgeEl.className = 'px-2 py-0.5 text-xs rounded-full bg-emerald-500/20 text-emerald-300 font-medium border border-emerald-500/30';
-          toggleBtn.innerHTML = '<span>🏠</span> 방으로 들어가기';
-          toggleBtn.className = 'px-3 py-1.5 rounded-xl bg-stone-700 hover:bg-stone-600 text-stone-200 text-xs font-semibold shadow-md transition flex items-center gap-1.5';
-          showToast('🌿 햇살 가득한 마을 광장으로 나왔습니다!');
-        } else {
-          player.x = 480;
-          player.y = 510;
-          player.targetX = 480;
-          player.targetY = 510;
-          player.dir = 'up';
-          iconEl.textContent = '🏡';
-          badgeEl.textContent = '실내 거실';
-          badgeEl.className = 'px-2 py-0.5 text-xs rounded-full bg-amber-500/20 text-amber-300 font-medium border border-amber-500/30';
-          toggleBtn.innerHTML = '<span>🚪</span> 밖으로 나가기';
-          toggleBtn.className = 'px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold shadow-md transition flex items-center gap-1.5';
-          showToast(`🏡 ${userProfile.name}의 방으로 들어왔습니다.`);
+      let dx = 0;
+      let dy = 0;
+
+      const up = keys['w'] || keys['arrowup'];
+      const down = keys['s'] || keys['arrowdown'];
+      const left = keys['a'] || keys['arrowleft'];
+      const right = keys['d'] || keys['arrowright'];
+
+      if (up || down || left || right) {
+        if (up) dy -= 1;
+        if (down) dy += 1;
+        if (left) dx -= 1;
+        if (right) dx += 1;
+
+        const len = Math.hypot(dx, dy);
+        if (len > 0) {
+          dx = (dx / len) * player.speed;
+          dy = (dy / len) * player.speed;
         }
-
-        setTimeout(() => {
-          overlay.style.opacity = '0';
-          isTransitioning = false;
-        }, 150);
-      }, 300);
-    }
-
-    // --- 5. 렌더링 루프 ---
-    function update() {
-      // 키보드 조작 확인
-      let vx = 0;
-      let vy = 0;
-      if (keys['w'] || keys['arrowup']) vy -= 1;
-      if (keys['s'] || keys['arrowdown']) vy += 1;
-      if (keys['a'] || keys['arrowleft']) vx -= 1;
-      if (keys['d'] || keys['arrowright']) vx += 1;
-
-      if (vx !== 0 || vy !== 0) {
-        // 벡터 정규화
-        const len = Math.hypot(vx, vy);
-        const stepX = (vx / len) * player.speed;
-        const stepY = (vy / len) * player.speed;
-
-        if (!checkCollision(player.x + stepX, player.y)) player.x += stepX;
-        if (!checkCollision(player.x, player.y + stepY)) player.y += stepY;
-
         player.targetX = player.x;
         player.targetY = player.y;
-        player.isMoving = true;
+      } else {
+        const distX = player.targetX - player.x;
+        const distY = player.targetY - player.y;
+        const distance = Math.hypot(distX, distY);
 
-        if (Math.abs(vx) > Math.abs(vy)) {
-          player.dir = vx > 0 ? 'right' : 'left';
+        if (distance > 4) {
+          dx = (distX / distance) * Math.min(player.speed, distance);
+          dy = (distY / distance) * Math.min(player.speed, distance);
         } else {
-          player.dir = vy > 0 ? 'down' : 'up';
+          player.x = player.targetX;
+          player.y = player.targetY;
+        }
+      }
+
+      let actuallyMoved = false;
+      if (dx !== 0 || dy !== 0) {
+        if (!checkCollision(player.x + dx, player.y + dy, player.radius)) {
+          player.x += dx;
+          player.y += dy;
+          actuallyMoved = true;
+        } else {
+          if (!checkCollision(player.x + dx, player.y, player.radius)) {
+            player.x += dx;
+            actuallyMoved = true;
+          }
+          if (!checkCollision(player.x, player.y + dy, player.radius)) {
+            player.y += dy;
+            actuallyMoved = true;
+          }
+        }
+      }
+
+      if (actuallyMoved) {
+        player.moving = true;
+        player.stepCycle += 0.22;
+        if (Math.abs(dx) > Math.abs(dy)) {
+          player.direction = dx > 0 ? 'right' : 'left';
+        } else {
+          player.direction = dy > 0 ? 'down' : 'up';
+        }
+
+        if (Math.random() < 0.2) {
+          particles.push({
+            x: player.x + (Math.random() - 0.5) * 8,
+            y: player.y + 12,
+            vx: -dx * 0.08,
+            vy: -0.2,
+            life: 0.5,
+            color: currentScene === 'room' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(34, 197, 94, 0.3)'
+          });
         }
       } else {
-        // 마우스 클릭 목표 지점 이동
-        const dx = player.targetX - player.x;
-        const dy = player.targetY - player.y;
-        const dist = Math.hypot(dx, dy);
+        player.moving = false;
+        player.stepCycle = 0;
+      }
 
-        if (dist > 4) {
-          player.isMoving = true;
-          const step = Math.min(player.speed, dist);
-          const nextX = player.x + (dx / dist) * step;
-          const nextY = player.y + (dy / dist) * step;
+      let nearest = null;
+      let minDistance = 80;
 
-          // 슬라이딩 이동 지원
-          let moved = false;
-          if (!checkCollision(nextX, player.y)) {
-            player.x = nextX;
-            moved = true;
-          }
-          if (!checkCollision(player.x, nextY)) {
-            player.y = nextY;
-            moved = true;
-          }
-
-          if (!moved) {
-            player.targetX = player.x;
-            player.targetY = player.y;
-            player.isMoving = false;
-          }
-
-          if (Math.abs(dx) > Math.abs(dy)) {
-            player.dir = dx > 0 ? 'right' : 'left';
-          } else {
-            player.dir = dy > 0 ? 'down' : 'up';
-          }
-        } else {
-          player.isMoving = false;
+      for (const item of sceneData.furnitures) {
+        if (!item.interactive) continue;
+        const centerX = item.x + item.w / 2;
+        const centerY = item.y + item.h / 2;
+        const dist = Math.hypot(player.x - centerX, player.y - centerY);
+        if (dist < minDistance) {
+          minDistance = dist;
+          nearest = item;
         }
       }
 
-      // 걸음 모션 타이머
-      if (player.isMoving) {
-        player.walkTimer += 0.2;
+      const doorCenterX = door.x + door.w / 2;
+      const doorCenterY = door.y + door.h / 2;
+      const distToDoor = Math.hypot(player.x - doorCenterX, player.y - doorCenterY);
+      if (distToDoor < 65 && !nearest) {
+        nearest = {
+          icon: currentScene === 'room' ? '<i class="fa-solid fa-door-open"></i>' : '<i class="fa-solid fa-house"></i>',
+          prompt: currentScene === 'room' ? '문 열고 마을 광장으로 나가기' : '집 문 열고 실내로 들어가기',
+          action: () => transitionToScene(door.targetScene),
+          zone: '출입문'
+        };
+      }
+
+      activeInteractive = nearest;
+      if (nearest) {
+        interactionPrompt.classList.remove('opacity-0', 'translate-y-3', 'pointer-events-none');
+        interactionPrompt.classList.add('opacity-100', 'translate-y-0');
+        promptIcon.innerHTML = nearest.icon;
+        promptLabel.textContent = nearest.prompt;
+        interactionBtn.onclick = nearest.action;
+        zoneBadge.textContent = nearest.zone || (currentScene === 'room' ? '거실 라운지' : '광장 중앙');
       } else {
-        player.walkTimer = 0;
-      }
-
-      // 맵 출입문 트리거 체크
-      if (!isTransitioning) {
-        if (currentScene === 'indoor' && player.y > MAP_H - 80 && Math.abs(player.x - 480) < 40) {
-          switchScene('outdoor');
-        } else if (currentScene === 'outdoor' && player.y < 80 && Math.abs(player.x - 480) < 40) {
-          switchScene('indoor');
-        }
-      }
-
-      // 파티클 업데이트
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        p.x += p.vx;
-        p.y += p.vy;
-        p.alpha -= p.decay;
-        if (p.alpha <= 0) particles.splice(i, 1);
+        interactionPrompt.classList.add('opacity-0', 'translate-y-3', 'pointer-events-none');
+        interactionPrompt.classList.remove('opacity-100', 'translate-y-0');
       }
     }
 
-    function draw() {
-      ctx.clearRect(0, 0, MAP_W, MAP_H);
+    // ================= DRAWING: INDOOR ROOM =================
+    function drawRoomScene() {
+      const bounds = roomScene.bounds;
 
-      if (currentScene === 'indoor') {
-        drawIndoorScene();
-      } else {
-        drawOutdoorScene();
-      }
+      ctx.fillStyle = '#4a2d1d';
+      ctx.fillRect(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
 
-      // 클릭 링 이펙트
-      if (player.clickEffect && player.clickEffect.alpha > 0) {
-        ctx.save();
+      ctx.strokeStyle = '#3d2417';
+      ctx.lineWidth = 1.5;
+      for (let y = bounds.minY; y < bounds.maxY; y += 28) {
         ctx.beginPath();
-        ctx.arc(player.clickEffect.x, player.clickEffect.y, player.clickEffect.radius, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(245, 158, 11, ${player.clickEffect.alpha})`;
-        ctx.lineWidth = 2.5;
+        ctx.moveTo(bounds.minX, y);
+        ctx.lineTo(bounds.maxX, y);
         ctx.stroke();
-        ctx.restore();
-        player.clickEffect.radius += 0.9;
-        player.clickEffect.alpha -= 0.04;
       }
 
-      // 파티클 그리기
-      particles.forEach(p => {
-        ctx.save();
-        ctx.globalAlpha = p.alpha;
-        ctx.fillStyle = p.color;
+      ctx.fillStyle = '#1e293b';
+      roundRect(ctx, 370, 260, 260, 200, 20, true, false);
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2;
+      roundRect(ctx, 378, 268, 244, 184, 14, false, true);
+
+      ctx.fillStyle = '#312e81';
+      roundRect(ctx, 220, 460, 80, 140, 16, true, false);
+
+      const wallGrad = ctx.createLinearGradient(0, 0, 0, bounds.minY);
+      wallGrad.addColorStop(0, '#191522');
+      wallGrad.addColorStop(1, '#2d2238');
+      ctx.fillStyle = wallGrad;
+      ctx.fillRect(bounds.minX - 20, 30, (bounds.maxX - bounds.minX) + 40, bounds.minY - 30);
+
+      drawWindow(420, 25, 160, 65);
+
+      ctx.fillStyle = '#191522';
+      ctx.fillRect(bounds.minX - 25, 30, 25, bounds.maxY - 30);
+      ctx.fillRect(bounds.maxX, 30, 25, bounds.maxY - 30);
+
+      ctx.fillStyle = '#1f1627';
+      ctx.fillRect(bounds.minX - 25, bounds.maxY, (450 - bounds.minX) + 25, 35);
+      ctx.fillRect(550, bounds.maxY, (bounds.maxX - 550) + 25, 35);
+
+      ctx.fillStyle = '#b45309';
+      roundRect(ctx, 455, bounds.maxY - 25, 90, 30, 6, true, false);
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 1.5;
+      roundRect(ctx, 458, bounds.maxY - 22, 84, 24, 4, false, true);
+
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(460, bounds.maxY + 5, 80, 12);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 10px Pretendard, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('OUTSIDE ➜', 500, bounds.maxY + 15);
+    }
+
+    // ================= DRAWING: OUTDOOR PLAZA =================
+    function drawPlazaScene() {
+      const bounds = plazaScene.bounds;
+
+      ctx.fillStyle = '#2d6a4f';
+      ctx.fillRect(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
+
+      ctx.fillStyle = '#40916c';
+      for (let i = 0; i < 30; i++) {
+        const gx = bounds.minX + ((i * 73) % (bounds.maxX - bounds.minX - 40));
+        const gy = bounds.minY + ((i * 47) % (bounds.maxY - bounds.minY - 40));
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.arc(gx, gy, 8, 0, Math.PI * 2);
         ctx.fill();
-        ctx.restore();
-      });
+      }
 
-      // 아바타 그리기
-      drawAvatar(player.x, player.y, player.dir, player.walkTimer, userProfile.gender);
+      ctx.fillStyle = '#94a3b8';
+      ctx.beginPath();
+      ctx.arc(500, 370, 140, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 3;
+      ctx.stroke();
 
-      requestAnimationFrame(() => {
-        update();
-        draw();
-      });
-    }
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillRect(445, bounds.minY, 110, 260);
+      ctx.fillRect(bounds.minX + 20, 340, bounds.maxX - bounds.minX - 40, 60);
 
-    // --- 6. 씬 배경 그래픽 그리기 ---
-    function drawIndoorScene() {
-      // 따뜻한 오크 우드 마루 바닥
-      ctx.fillStyle = '#29221b';
-      ctx.fillRect(0, 0, MAP_W, MAP_H);
-
-      // 마루판 패턴 라인
-      ctx.strokeStyle = '#221b15';
+      ctx.strokeStyle = '#64748b';
       ctx.lineWidth = 1;
-      for (let y = 100; y < MAP_H - 60; y += 36) {
+      for (let y = bounds.minY + 10; y < 340; y += 22) {
         ctx.beginPath();
-        ctx.moveTo(60, y);
-        ctx.lineTo(MAP_W - 60, y);
+        ctx.moveTo(445, y);
+        ctx.lineTo(555, y);
         ctx.stroke();
       }
 
-      // 북쪽 벽면
-      ctx.fillStyle = '#3a342d';
-      ctx.fillRect(50, 40, MAP_W - 100, 60);
-
-      // 벽 창문 & 햇살
-      ctx.fillStyle = '#60a5fa';
-      ctx.fillRect(400, 48, 160, 40);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-      ctx.fillRect(402, 50, 76, 36);
-      ctx.fillRect(482, 50, 76, 36);
-
-      // 거실 러그 카펫
-      ctx.fillStyle = '#3f3931';
+      ctx.fillStyle = '#1e293b';
+      roundRect(ctx, 420, bounds.minY - 15, 160, 65, 8, true, false);
+      ctx.fillStyle = '#991b1b';
       ctx.beginPath();
-      ctx.roundRect(330, 210, 300, 160, 24);
+      ctx.moveTo(410, bounds.minY + 15);
+      ctx.lineTo(500, bounds.minY - 25);
+      ctx.lineTo(590, bounds.minY + 15);
+      ctx.closePath();
       ctx.fill();
 
-      // 문 발판 매트 및 표지판
-      ctx.fillStyle = '#b45309';
-      ctx.fillRect(indoorDoor.x, indoorDoor.y + 10, indoorDoor.w, indoorDoor.h - 10);
-      ctx.fillStyle = '#fef3c7';
-      ctx.font = 'bold 12px Pretendard';
+      ctx.fillStyle = '#78350f';
+      roundRect(ctx, 475, bounds.minY + 10, 50, 48, 6, true, false);
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath();
+      ctx.arc(483, bounds.minY + 34, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#334155';
+      roundRect(ctx, 470, bounds.minY + 54, 60, 14, 3, true, false);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 9px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('OUTSIDE ➔', indoorDoor.x + 40, indoorDoor.y + 32);
+      ctx.fillText('HOME ➜', 500, bounds.minY + 65);
 
-      // 가구 렌더링
-      indoorColliders.forEach(c => {
-        ctx.save();
-        ctx.fillStyle = '#1c1917';
-        ctx.beginPath();
-        ctx.roundRect(c.x + 4, c.y + 8, c.w, c.h, 12);
-        ctx.fill();
-
-        if (c.type === 'desk') {
-          ctx.fillStyle = '#44403c';
-          ctx.beginPath();
-          ctx.roundRect(c.x, c.y, c.w, c.h, 10);
-          ctx.fill();
-          // 모니터
-          ctx.fillStyle = '#38bdf8';
-          ctx.fillRect(c.x + 75, c.y + 15, 50, 28);
-        } else if (c.type === 'coffee') {
-          ctx.fillStyle = '#573f2c';
-          ctx.beginPath();
-          ctx.roundRect(c.x, c.y, c.w, c.h, 10);
-          ctx.fill();
-          // 머신
-          ctx.fillStyle = '#d97706';
-          ctx.fillRect(c.x + 85, c.y + 20, 30, 25);
-        } else if (c.type === 'sofa') {
-          ctx.fillStyle = '#4b5563';
-          ctx.beginPath();
-          ctx.roundRect(c.x, c.y, c.w, c.h, 16);
-          ctx.fill();
-          ctx.fillStyle = '#d97706';
-          ctx.fillRect(c.x + 80, c.y + 35, 40, 30);
-        } else if (c.type === 'bed') {
-          ctx.fillStyle = '#1e3a8a';
-          ctx.beginPath();
-          ctx.roundRect(c.x, c.y, c.w, c.h, 12);
-          ctx.fill();
-          ctx.fillStyle = '#93c5fd';
-          ctx.fillRect(c.x + 10, c.y + 10, c.w - 20, 45);
-        } else if (c.type === 'music') {
-          ctx.fillStyle = '#3f2e20';
-          ctx.beginPath();
-          ctx.roundRect(c.x, c.y, c.w, c.h, 10);
-          ctx.fill();
-          // LP판
-          ctx.fillStyle = '#18181b';
-          ctx.beginPath();
-          ctx.arc(c.x + 65, c.y + 45, 26, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        // 라벨 텍스트
-        ctx.fillStyle = '#d6d3d1';
-        ctx.font = '12px Pretendard';
-        ctx.textAlign = 'center';
-        ctx.fillText(c.name, c.x + c.w / 2, c.y + c.h - 10);
-        ctx.restore();
-      });
+      drawStreetLamp(380, 220);
+      drawStreetLamp(620, 220);
+      drawStreetLamp(360, 470);
+      drawStreetLamp(640, 470);
     }
 
-    function drawOutdoorScene() {
-      // 잔디 바닥
-      ctx.fillStyle = '#223d24';
-      ctx.fillRect(0, 0, MAP_W, MAP_H);
+    function drawStreetLamp(x, y) {
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(x - 2, y, 4, 30);
+      ctx.fillStyle = '#fef08a';
+      ctx.beginPath();
+      ctx.arc(x, y - 4, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(254, 240, 138, 0.18)';
+      ctx.beginPath();
+      ctx.arc(x, y - 4, 18, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
-      // 자갈 보도블록 산책길
-      ctx.fillStyle = '#44403c';
-      ctx.fillRect(420, 60, 120, MAP_H - 120);
-      ctx.fillRect(180, 270, MAP_W - 360, 100);
+    function drawWindow(x, y, w, h) {
+      ctx.save();
+      ctx.fillStyle = '#1e1b2e';
+      roundRect(ctx, x, y, w, h, 6, true, false);
 
-      // 집 입구 표시
-      ctx.fillStyle = '#b45309';
-      ctx.fillRect(outdoorHomeDoor.x, outdoorHomeDoor.y, outdoorHomeDoor.w, outdoorHomeDoor.h);
-      ctx.fillStyle = '#fef3c7';
-      ctx.font = 'bold 12px Pretendard';
-      ctx.textAlign = 'center';
-      ctx.fillText('HOME ➔', outdoorHomeDoor.x + 40, outdoorHomeDoor.y + 30);
+      let skyGrad = ctx.createLinearGradient(x, y, x, y + h);
+      if (currentMood === 0) {
+        skyGrad.addColorStop(0, '#38bdf8');
+        skyGrad.addColorStop(1, '#bae6fd');
+      } else if (currentMood === 1) {
+        skyGrad.addColorStop(0, '#f97316');
+        skyGrad.addColorStop(1, '#fbbf24');
+      } else {
+        skyGrad.addColorStop(0, '#0f172a');
+        skyGrad.addColorStop(1, '#1e1b4b');
+      }
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(x + 4, y + 4, w - 8, h - 8);
 
-      // 야외 오브젝트 렌더링
-      outdoorColliders.forEach(c => {
+      ctx.strokeStyle = '#2d2640';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x + w / 2, y + 4);
+      ctx.lineTo(x + w / 2, y + h - 4);
+      ctx.moveTo(x + 4, y + h / 2);
+      ctx.lineTo(x + w - 4, y + h / 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // ================= DRAW FURNITURE & SCENIC PROPS =================
+    function drawFurnitures() {
+      const sceneData = getCurrentSceneData();
+
+      sceneData.furnitures.forEach(item => {
         ctx.save();
-        if (c.type === 'fountain') {
-          // 분수대
-          ctx.fillStyle = '#38bdf8';
-          ctx.beginPath();
-          ctx.arc(c.x + 60, c.y + 60, 55, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.lineWidth = 6;
-          ctx.strokeStyle = '#94a3b8';
-          ctx.stroke();
 
-          // 중앙 노즐
-          ctx.fillStyle = '#f8fafc';
-          ctx.beginPath();
-          ctx.arc(c.x + 60, c.y + 60, 14, 0, Math.PI * 2);
-          ctx.fill();
-        } else if (c.type === 'board') {
-          // 게시판
-          ctx.fillStyle = '#78350f';
-          ctx.fillRect(c.x + 10, c.y + c.h - 12, 10, 12);
-          ctx.fillRect(c.x + c.w - 20, c.y + c.h - 12, 10, 12);
-          ctx.fillStyle = '#d97706';
-          ctx.beginPath();
-          ctx.roundRect(c.x, c.y, c.w, c.h - 10, 8);
-          ctx.fill();
-          ctx.fillStyle = '#fef3c7';
-          ctx.fillRect(c.x + 10, c.y + 8, c.w - 20, c.h - 26);
-        } else if (c.type === 'bench') {
-          // 벤치
-          ctx.fillStyle = '#92400e';
-          ctx.beginPath();
-          ctx.roundRect(c.x, c.y, c.w, c.h, 6);
-          ctx.fill();
-        } else if (c.type === 'flowers') {
-          // 화단
-          ctx.fillStyle = '#166534';
-          ctx.beginPath();
-          ctx.roundRect(c.x, c.y, c.w, c.h, 12);
-          ctx.fill();
-          // 알록달록 꽃들
-          const colors = ['#f43f5e', '#ec4899', '#a855f7', '#fbbf24'];
-          for (let i = 0; i < 16; i++) {
-            ctx.fillStyle = colors[i % colors.length];
-            const fx = c.x + 20 + (i % 4) * 36;
-            const fy = c.y + 20 + Math.floor(i / 4) * 22;
+        if (currentScene === 'room') {
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+          roundRect(ctx, item.x + 4, item.y + 6, item.w, item.h, 12, true, false);
+
+          if (item.type === 'desk') {
+            ctx.fillStyle = item.topColor;
+            roundRect(ctx, item.x, item.y, item.w, item.h, 10, true, false);
+            ctx.strokeStyle = '#633c1d';
+            ctx.lineWidth = 2;
+            roundRect(ctx, item.x, item.y, item.w, item.h, 10, false, true);
+
+            ctx.fillStyle = '#0f172a';
+            roundRect(ctx, item.x + 35, item.y + 12, 55, 36, 4, true, false);
+            roundRect(ctx, item.x + 95, item.y + 12, 55, 36, 4, true, false);
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(item.x + 38, item.y + 15, 49, 30);
+            ctx.fillStyle = '#a855f7';
+            ctx.fillRect(item.x + 98, item.y + 15, 49, 30);
+
+            ctx.fillStyle = '#f59e0b';
+            roundRect(ctx, item.x + 165, item.y + 20, 14, 14, 3, true, false);
+            ctx.fillStyle = '#10b981';
             ctx.beginPath();
-            ctx.arc(fx, fy, 5, 0, Math.PI * 2);
+            ctx.arc(item.x + 172, item.y + 18, 9, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#334155';
+            roundRect(ctx, item.x + 70, item.y + 55, 45, 30, 8, true, false);
+
+          } else if (item.type === 'kitchen') {
+            ctx.fillStyle = item.color;
+            roundRect(ctx, item.x, item.y, item.w, item.h, 8, true, false);
+            ctx.fillStyle = item.topColor;
+            roundRect(ctx, item.x, item.y, item.w, 40, 8, true, false);
+
+            ctx.fillStyle = '#b91c1c';
+            roundRect(ctx, item.x + 25, item.y + 8, 30, 24, 4, true, false);
+            ctx.fillStyle = '#ffffff';
+            roundRect(ctx, item.x + 65, item.y + 16, 12, 12, 2, true, false);
+
+            ctx.fillStyle = '#d97706';
+            ctx.beginPath();
+            ctx.arc(item.x + 40, item.y + 65, 14, 0, Math.PI * 2);
+            ctx.arc(item.x + 100, item.y + 65, 14, 0, Math.PI * 2);
+            ctx.arc(item.x + 155, item.y + 65, 14, 0, Math.PI * 2);
+            ctx.fill();
+
+          } else if (item.type === 'bed') {
+            ctx.fillStyle = '#78350f';
+            roundRect(ctx, item.x, item.y, item.w, item.h, 12, true, false);
+            ctx.fillStyle = '#f1f5f9';
+            roundRect(ctx, item.x + 8, item.y + 8, item.w - 16, item.h - 16, 8, true, false);
+            ctx.fillStyle = '#3b82f6';
+            roundRect(ctx, item.x + 8, item.y + 55, item.w - 16, item.h - 63, 6, true, false);
+            ctx.fillStyle = '#ffffff';
+            roundRect(ctx, item.x + 20, item.y + 16, 45, 26, 6, true, false);
+            roundRect(ctx, item.x + 85, item.y + 16, 45, 26, 6, true, false);
+
+          } else if (item.type === 'records') {
+            ctx.fillStyle = item.color;
+            roundRect(ctx, item.x, item.y, item.w, item.h, 10, true, false);
+            ctx.fillStyle = '#1e293b';
+            roundRect(ctx, item.x + 16, item.y + 16, 75, 60, 6, true, false);
+            ctx.fillStyle = '#09090b';
+            ctx.beginPath();
+            ctx.arc(item.x + 50, item.y + 46, 22, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.arc(item.x + 50, item.y + 46, 7, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#f59e0b';
+            roundRect(ctx, item.x + 105, item.y + 20, 45, 10, 2, true, false);
+            ctx.fillStyle = '#10b981';
+            roundRect(ctx, item.x + 105, item.y + 35, 45, 10, 2, true, false);
+            ctx.fillStyle = '#6366f1';
+            roundRect(ctx, item.x + 105, item.y + 50, 45, 10, 2, true, false);
+
+            ctx.fillStyle = '#1e1b24';
+            roundRect(ctx, item.x + 25, item.y + 90, 50, 60, 6, true, false);
+            ctx.fillStyle = '#334155';
+            ctx.beginPath();
+            ctx.arc(item.x + 50, item.y + 110, 12, 0, Math.PI * 2);
+            ctx.arc(item.x + 50, item.y + 134, 8, 0, Math.PI * 2);
+            ctx.fill();
+
+          } else if (item.type === 'sofa') {
+            ctx.fillStyle = item.topColor;
+            roundRect(ctx, item.x, item.y, item.w, item.h, 16, true, false);
+            ctx.fillStyle = '#1e293b';
+            roundRect(ctx, item.x - 4, item.y + 6, 18, item.h - 12, 6, true, false);
+            roundRect(ctx, item.x + item.w - 14, item.y + 6, 18, item.h - 12, 6, true, false);
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(item.x + item.w / 2, item.y + 12);
+            ctx.lineTo(item.x + item.w / 2, item.y + item.h - 12);
+            ctx.stroke();
+
+          } else if (item.type === 'table') {
+            ctx.fillStyle = item.topColor;
+            roundRect(ctx, item.x, item.y, item.w, item.h, 8, true, false);
+            ctx.fillStyle = '#f8fafc';
+            roundRect(ctx, item.x + 35, item.y + 18, 26, 20, 2, true, false);
+            ctx.fillStyle = '#f59e0b';
+            ctx.beginPath();
+            ctx.arc(item.x + 85, item.y + 28, 6, 0, Math.PI * 2);
             ctx.fill();
           }
+
+        } else {
+          if (item.type === 'fountain') {
+            ctx.fillStyle = '#64748b';
+            ctx.beginPath();
+            ctx.ellipse(item.x + item.w / 2, item.y + item.h / 2, item.w / 2, item.h / 2, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            ctx.fillStyle = '#0284c7';
+            ctx.beginPath();
+            ctx.ellipse(item.x + item.w / 2, item.y + item.h / 2, item.w / 2 - 10, item.h / 2 - 10, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            const wave = Math.sin(Date.now() * 0.005) * 4;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.ellipse(item.x + item.w / 2, item.y + item.h / 2, 35 + wave, 22 + wave, 0, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(item.x + item.w / 2, item.y + item.h / 2 - 6, 9 + wave * 0.5, 0, Math.PI * 2);
+            ctx.fill();
+
+          } else if (item.type === 'tree') {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.beginPath();
+            ctx.ellipse(item.x + item.w / 2, item.y + item.h - 10, 35, 16, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#78350f';
+            roundRect(ctx, item.x + item.w / 2 - 10, item.y + item.h / 2, 20, item.h / 2, 4, true, false);
+
+            ctx.fillStyle = item.id === 'tree_left' ? '#15803d' : '#16a34a';
+            ctx.beginPath();
+            ctx.arc(item.x + item.w / 2, item.y + item.h / 2 - 15, 42, 0, Math.PI * 2);
+            ctx.arc(item.x + item.w / 2 - 20, item.y + item.h / 2 - 5, 30, 0, Math.PI * 2);
+            ctx.arc(item.x + item.w / 2 + 20, item.y + item.h / 2 - 5, 30, 0, Math.PI * 2);
+            ctx.fill();
+
+          } else if (item.type === 'bench') {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+            roundRect(ctx, item.x + 3, item.y + 6, item.w, item.h, 6, true, false);
+            ctx.fillStyle = '#b45309';
+            roundRect(ctx, item.x, item.y, item.w, 14, 4, true, false);
+            roundRect(ctx, item.x, item.y + 18, item.w, 14, 4, true, false);
+            roundRect(ctx, item.x, item.y + 36, item.w, 14, 4, true, false);
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(item.x + 6, item.y, 6, item.h);
+            ctx.fillRect(item.x + item.w - 12, item.y, 6, item.h);
+
+          } else if (item.type === 'garden') {
+            ctx.fillStyle = '#3f2212';
+            roundRect(ctx, item.x, item.y, item.w, item.h, 16, true, false);
+            ctx.strokeStyle = '#78350f';
+            ctx.lineWidth = 3;
+            roundRect(ctx, item.x, item.y, item.w, item.h, 16, false, true);
+
+            const flowerColors = ['#f43f5e', '#ec4899', '#a855f7', '#fbbf24', '#ffffff'];
+            for (let f = 0; f < 18; f++) {
+              const fx = item.x + 18 + ((f * 26) % (item.w - 36));
+              const fy = item.y + 18 + ((f * 17) % (item.h - 36));
+              ctx.fillStyle = flowerColors[f % flowerColors.length];
+              ctx.beginPath();
+              ctx.arc(fx, fy, 5, 0, Math.PI * 2);
+              ctx.fill();
+            }
+
+          } else if (item.type === 'notice') {
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(item.x + 10, item.y + item.h - 15, 8, 25);
+            ctx.fillRect(item.x + item.w - 18, item.y + item.h - 15, 8, 25);
+
+            ctx.fillStyle = '#92400e';
+            roundRect(ctx, item.x, item.y, item.w, item.h - 10, 6, true, false);
+            ctx.fillStyle = '#fef08a';
+            roundRect(ctx, item.x + 8, item.y + 6, item.w - 16, item.h - 22, 3, true, false);
+            ctx.fillStyle = '#475569';
+            ctx.fillRect(item.x + 14, item.y + 12, item.w - 28, 3);
+            ctx.fillRect(item.x + 14, item.y + 18, item.w - 38, 2);
+            ctx.fillRect(item.x + 14, item.y + 23, item.w - 32, 2);
+          }
         }
 
-        ctx.fillStyle = '#f1f5f9';
-        ctx.font = 'bold 12px Pretendard';
-        ctx.textAlign = 'center';
-        ctx.fillText(c.name, c.x + c.w / 2, c.y + c.h + 16);
+        if (item.interactive && item.type !== 'porch') {
+          const badgeX = item.x + item.w / 2;
+          const badgeY = item.y - 12 + Math.sin(Date.now() * 0.005) * 3;
+          ctx.fillStyle = '#fbbf24';
+          ctx.beginPath();
+          ctx.arc(badgeX, badgeY, 6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#1e1b24';
+          ctx.beginPath();
+          ctx.arc(badgeX, badgeY, 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
         ctx.restore();
       });
     }
 
-    // --- 7. 성별별 아바타 렌더링 ---
-    function drawAvatar(x, y, dir, timer, gender) {
-      ctx.save();
-      const bounce = Math.sin(timer) * 3;
+    function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+      if (fill) ctx.fill();
+      if (stroke) ctx.stroke();
+    }
 
-      // 발 밑 그림자
+    // ================= DRAW CHARACTER AVATAR WITH GENDER STYLING =================
+    function drawAvatar() {
+      ctx.save();
+      const x = player.x;
+      const y = player.y;
+
+      const bounce = player.moving ? Math.sin(player.stepCycle * 2) * 2.5 : 0;
+      const legOffset = player.moving ? Math.sin(player.stepCycle) * 5 : 0;
+
+      // Soft Shadow
       ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
       ctx.beginPath();
-      ctx.ellipse(x, y + 16, 14, 6, 0, 0, Math.PI * 2);
+      ctx.ellipse(x, y + 14, 15, 6, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // 몸통 / 상의
-      if (gender === 'male') {
-        // 단정한 네이비 자켓
-        ctx.fillStyle = '#1e3a8a';
-      } else {
-        // 포근한 크림 핑크 니트
-        ctx.fillStyle = '#ec4899';
-      }
+      // Shoes
+      ctx.fillStyle = '#1e293b';
       ctx.beginPath();
-      ctx.roundRect(x - 9, y - 6 + bounce, 18, 18, 5);
+      ctx.arc(x - 5, y + 12 - legOffset, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(x + 5, y + 12 + legOffset, 4, 0, Math.PI * 2);
       ctx.fill();
 
-      // 하의 (팬츠 vs 스커트)
-      if (gender === 'male') {
-        // 차콜 슬랙스 팬츠
+      // Lower Body (Pants vs Skirt)
+      if (userProfile.gender === 'female') {
+        // Skirt
+        ctx.fillStyle = '#9d174d';
+        ctx.beginPath();
+        ctx.moveTo(x - 11, y + 6 + bounce);
+        ctx.lineTo(x + 11, y + 6 + bounce);
+        ctx.lineTo(x + 13, y + 13 + bounce);
+        ctx.lineTo(x - 13, y + 13 + bounce);
+        ctx.closePath();
+        ctx.fill();
+      } else {
+        // Slacks Pants
         ctx.fillStyle = '#334155';
-        ctx.fillRect(x - 8, y + 11 + bounce, 6, 8);
-        ctx.fillRect(x + 2, y + 11 + bounce, 6, 8);
-      } else {
-        // 플리츠 스커트 & 다리
-        ctx.fillStyle = '#be185d';
-        ctx.beginPath();
-        ctx.roundRect(x - 9, y + 10 + bounce, 18, 8, 3);
-        ctx.fill();
-        ctx.fillStyle = '#fed7aa';
-        ctx.fillRect(x - 6, y + 17 + bounce, 4, 4);
-        ctx.fillRect(x + 2, y + 17 + bounce, 4, 4);
+        ctx.fillRect(x - 7, y + 8 + bounce, 5, 6);
+        ctx.fillRect(x + 2, y + 8 + bounce, 5, 6);
       }
 
-      // 얼굴 (스킨)
-      ctx.fillStyle = '#fed7aa';
+      // Upper Body / Outfit
+      ctx.fillStyle = player.color;
+      roundRect(ctx, x - 12, y - 6 + bounce, 24, 16, 6, true, false);
+
+      // Shirt collar / Ribbon accent
+      if (userProfile.gender === 'female') {
+        // Small cute neck ribbon
+        ctx.fillStyle = '#fde047';
+        ctx.beginPath();
+        ctx.arc(x, y - 4 + bounce, 3, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        // Inner shirt collar strip
+        ctx.fillStyle = '#e2e8f0';
+        ctx.fillRect(x - 2, y - 4 + bounce, 4, 9);
+      }
+
+      // Head
+      ctx.fillStyle = player.faceColor;
       ctx.beginPath();
-      ctx.arc(x, y - 14 + bounce, 10, 0, Math.PI * 2);
+      ctx.arc(x, y - 16 + bounce, 12, 0, Math.PI * 2);
       ctx.fill();
 
-      // 성별 헤어스타일
-      if (gender === 'male') {
-        // 단정한 숏컷 헤어
-        ctx.fillStyle = '#1c1917';
+      // Gender-specific Hair
+      ctx.fillStyle = player.hairColor;
+      if (userProfile.gender === 'female') {
+        // Long wavy hair
         ctx.beginPath();
-        ctx.arc(x, y - 17 + bounce, 11, Math.PI, Math.PI * 2);
+        ctx.arc(x, y - 19 + bounce, 13, Math.PI * 0.85, Math.PI * 2.15);
         ctx.fill();
-        ctx.fillRect(x - 10, y - 18 + bounce, 20, 6);
-      } else {
-        // 롱 웨이브 헤어 & 헤어핀
-        ctx.fillStyle = '#451a03';
+        // Hair sides drooping down
         ctx.beginPath();
-        ctx.arc(x, y - 17 + bounce, 11, Math.PI, Math.PI * 2);
-        ctx.fill();
-        // 양 옆 롱 헤어
-        ctx.fillRect(x - 11, y - 18 + bounce, 4, 22);
-        ctx.fillRect(x + 7, y - 18 + bounce, 4, 22);
-        // 리본 포인트
+        roundRect(ctx, x - 14, y - 18 + bounce, 5, 20, 2.5, true, false);
+        roundRect(ctx, x + 9, y - 18 + bounce, 5, 20, 2.5, true, false);
+        // Hair bow/pin
         ctx.fillStyle = '#fbbf24';
-        ctx.fillRect(x + 6, y - 20 + bounce, 5, 4);
+        ctx.fillRect(x + 7, y - 22 + bounce, 5, 4);
+      } else {
+        // Clean male neat haircut
+        ctx.beginPath();
+        ctx.arc(x, y - 19 + bounce, 13, Math.PI * 0.9, Math.PI * 2.1);
+        ctx.fill();
+        ctx.fillRect(x - 11, y - 20 + bounce, 22, 6);
       }
 
-      // 시선 (눈동자)
-      ctx.fillStyle = '#18181b';
-      if (dir === 'down') {
-        ctx.fillRect(x - 4, y - 14 + bounce, 2, 3);
-        ctx.fillRect(x + 2, y - 14 + bounce, 2, 3);
-      } else if (dir === 'up') {
-        // 뒤통수 (얼굴 눈 안 보임)
-        if (gender === 'male') {
-          ctx.fillStyle = '#1c1917';
-          ctx.beginPath();
-          ctx.arc(x, y - 14 + bounce, 10, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      } else if (dir === 'left') {
-        ctx.fillRect(x - 7, y - 14 + bounce, 2, 3);
-      } else if (dir === 'right') {
-        ctx.fillRect(x + 5, y - 14 + bounce, 2, 3);
+      // Face direction & Blush
+      ctx.fillStyle = '#1e1b24';
+      if (player.direction === 'down') {
+        ctx.beginPath();
+        ctx.arc(x - 4, y - 15 + bounce, 1.8, 0, Math.PI * 2);
+        ctx.arc(x + 4, y - 15 + bounce, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#f472b6';
+        ctx.beginPath();
+        ctx.arc(x - 6, y - 12 + bounce, 2, 0, Math.PI * 2);
+        ctx.arc(x + 6, y - 12 + bounce, 2, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (player.direction === 'left') {
+        ctx.beginPath();
+        ctx.arc(x - 6, y - 15 + bounce, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#f472b6';
+        ctx.beginPath();
+        ctx.arc(x - 7, y - 12 + bounce, 2, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (player.direction === 'right') {
+        ctx.beginPath();
+        ctx.arc(x + 6, y - 15 + bounce, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#f472b6';
+        ctx.beginPath();
+        ctx.arc(x + 7, y - 12 + bounce, 2, 0, Math.PI * 2);
+        ctx.fill();
       }
 
-      // 머리 위 네임태그
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-      ctx.beginPath();
-      ctx.roundRect(x - 30, y - 36 + bounce, 60, 16, 8);
-      ctx.fill();
+      // Name Tag over Avatar's head
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+      const tagWidth = Math.max(48, userProfile.name.length * 13 + 16);
+      roundRect(ctx, x - tagWidth / 2, y - 38 + bounce, tagWidth, 16, 8, true, false);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.lineWidth = 1;
+      roundRect(ctx, x - tagWidth / 2, y - 38 + bounce, tagWidth, 16, 8, false, true);
 
       ctx.fillStyle = '#f8fafc';
-      ctx.font = 'bold 10px Pretendard';
+      ctx.font = 'bold 10px Pretendard, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(userProfile.name, x, y - 24 + bounce);
+      ctx.fillText(userProfile.name, x, y - 26 + bounce);
 
       ctx.restore();
     }
 
-    // --- 8. 인터랙션 및 토스트 알림 ---
-    function showToast(msg) {
-      const toast = document.getElementById('toast');
-      const toastMsg = document.getElementById('toast-msg');
-      toastMsg.textContent = msg;
-      toast.style.opacity = '1';
-      clearTimeout(toast.timer);
-      toast.timer = setTimeout(() => {
-        toast.style.opacity = '0';
-      }, 2500);
+    // Ripple effect
+    function drawRipple() {
+      if (!clickRipple) return;
+      ctx.save();
+      ctx.strokeStyle = `rgba(245, 158, 11, ${clickRipple.alpha})`;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.ellipse(clickRipple.x, clickRipple.y, clickRipple.radius * 1.5, clickRipple.radius * 0.8, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = `rgba(245, 158, 11, ${clickRipple.alpha})`;
+      ctx.beginPath();
+      ctx.arc(clickRipple.x, clickRipple.y, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      clickRipple.radius += 0.8;
+      clickRipple.alpha -= 0.035;
+
+      if (clickRipple.alpha <= 0) clickRipple = null;
+      ctx.restore();
     }
 
-    function spawnParticles(x, y, color, count = 12) {
-      for (let i = 0; i < count; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const spd = 1 + Math.random() * 2.5;
+    // Particles loop
+    function drawParticles() {
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= 0.02;
+
+        if (p.life <= 0) {
+          particles.splice(i, 1);
+          continue;
+        }
+
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = p.life;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, (p.size || 2.5) * p.life, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    // ================= MAIN RENDER LOOP =================
+    function animate() {
+      updatePlayer();
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.save();
+      ctx.translate(offsetX, offsetY);
+      ctx.scale(scale, scale);
+
+      if (currentScene === 'room') {
+        drawRoomScene();
+      } else {
+        drawPlazaScene();
+      }
+
+      drawFurnitures();
+      drawRipple();
+      drawAvatar();
+      drawParticles();
+
+      ctx.fillStyle = moods[currentMood].ambient;
+      ctx.fillRect(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
+
+      ctx.restore();
+      requestAnimationFrame(animate);
+    }
+
+    // ================= ACTIONS & MODAL HELPERS =================
+    function openModal(id) {
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    function teleportTo(destId) {
+      const sceneData = getCurrentSceneData();
+
+      if (destId === 'door') {
+        player.targetX = sceneData.doorZone.x + sceneData.doorZone.w / 2;
+        player.targetY = sceneData.doorZone.y - 15;
+      } else {
+        const item = sceneData.furnitures.find(f => f.id === destId);
+        if (!item) return;
+        player.targetX = item.x + item.w / 2;
+        player.targetY = item.y + item.h + 20;
+      }
+
+      clickRipple = {
+        x: player.targetX,
+        y: player.targetY,
+        radius: 4,
+        alpha: 1
+      };
+    }
+
+    function tossCoinInFountain() {
+      coinCount++;
+      document.getElementById('coinCountDisplay').textContent = coinCount;
+
+      const fountain = plazaScene.furnitures.find(f => f.id === 'fountain');
+      if (fountain) {
+        for (let i = 0; i < 20; i++) {
+          particles.push({
+            x: fountain.x + fountain.w / 2 + (Math.random() - 0.5) * 30,
+            y: fountain.y + fountain.h / 2 + (Math.random() - 0.5) * 15,
+            vx: (Math.random() - 0.5) * 2,
+            vy: -1.8 - Math.random() * 1.5,
+            size: 3.5,
+            life: 1.0,
+            color: '#38bdf8'
+          });
+        }
+      }
+      closeModal('modalFountain');
+    }
+
+    function triggerHeartBubble() {
+      for (let i = 0; i < 15; i++) {
         particles.push({
-          x: x,
-          y: y,
-          vx: Math.cos(angle) * spd,
-          vy: Math.sin(angle) * spd,
-          size: 2 + Math.random() * 3,
-          color: color,
-          alpha: 1,
-          decay: 0.02 + Math.random() * 0.03
+          x: player.x + (Math.random() - 0.5) * 20,
+          y: player.y - 10,
+          vx: (Math.random() - 0.5) * 0.8,
+          vy: -1.2 - Math.random(),
+          size: 4,
+          life: 1.2,
+          color: '#10b981'
         });
       }
     }
 
-    // 마우스 / 터치 좌표 변환
-    function handlePointer(clientX, clientY) {
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      const targetX = (clientX - rect.left) * scaleX;
-      const targetY = (clientY - rect.top) * scaleY;
+    function triggerFlowerPetals() {
+      for (let i = 0; i < 25; i++) {
+        particles.push({
+          x: player.x + (Math.random() - 0.5) * 40,
+          y: player.y - 10,
+          vx: 0.8 + Math.random() * 1.2,
+          vy: -0.5 + Math.random(),
+          size: 3.5,
+          life: 1.5,
+          color: '#f43f5e'
+        });
+      }
+    }
 
-      // 클릭 이펙트 생성
-      player.clickEffect = { x: targetX, y: targetY, radius: 4, alpha: 1 };
-      spawnParticles(targetX, targetY, '#f59e0b', 8);
+    function triggerCoffeeSteamEffect() {
+      const kitchen = roomScene.furnitures.find(f => f.id === 'kitchen');
+      for (let i = 0; i < 25; i++) {
+        setTimeout(() => {
+          particles.push({
+            x: kitchen.x + 71 + (Math.random() - 0.5) * 6,
+            y: kitchen.y + 15,
+            vx: (Math.random() - 0.5) * 0.4,
+            vy: -1.2 - Math.random() * 0.8,
+            size: 4,
+            life: 1.2,
+            color: 'rgba(255, 255, 255, 0.7)'
+          });
+        }, i * 60);
+      }
+    }
 
-      // 가구 클릭 인터랙션 확인
-      const colliders = currentScene === 'indoor' ? indoorColliders : outdoorColliders;
-      for (let c of colliders) {
-        if (targetX >= c.x && targetX <= c.x + c.w &&
-            targetY >= c.y && targetY <= c.y + c.h) {
-          
-          if (c.type === 'board') {
-            openBoardModal();
-            return;
-          } else if (c.type === 'fountain') {
-            spawnParticles(c.x + 60, c.y + 60, '#38bdf8', 25);
-            showToast('🪙 분수대에 행운의 소원 동전을 던졌습니다!');
-            return;
-          } else if (c.type === 'bench') {
-            showToast('🌿 벤치 그늘에 앉아 시원한 바람을 느낍니다.');
-            return;
-          } else if (c.type === 'flowers') {
-            spawnParticles(c.x + 85, c.y + 55, '#f43f5e', 20);
-            showToast('🌸 향기로운 꽃밭에서 맑은 꽃향기를 맡았습니다.');
-            return;
-          } else if (c.type === 'coffee') {
-            spawnParticles(c.x + 100, c.y + 35, '#d97706', 15);
-            showToast('☕ 신선한 원두를 갈아 따뜻한 드립 커피를 내렸습니다.');
-            return;
-          } else if (c.type === 'music') {
-            toggleBgm();
-            return;
-          }
+    function switchNoticeTab(tabKey) {
+      const tabs = ['updates', 'events', 'news'];
+      tabs.forEach(t => {
+        const content = document.getElementById('noticeTab' + t.charAt(0).toUpperCase() + t.slice(1));
+        const btn = document.getElementById('tabBtn' + t.charAt(0).toUpperCase() + t.slice(1));
+        if (t === tabKey) {
+          content.classList.remove('hidden');
+          btn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-amber-500 text-slate-950 transition shadow-sm';
+        } else {
+          content.classList.add('hidden');
+          btn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-300 hover:bg-white/10 transition';
         }
-      }
-
-      // 목표 이동 지점 지정
-      player.targetX = targetX;
-      player.targetY = targetY;
+      });
     }
 
-    canvas.addEventListener('mousedown', e => handlePointer(e.clientX, e.clientY));
-    canvas.addEventListener('touchstart', e => {
-      e.preventDefault();
-      if (e.touches.length > 0) {
-        handlePointer(e.touches[0].clientX, e.touches[0].clientY);
-      }
-    }, { passive: false });
-
-    // 버튼 바인딩
-    document.getElementById('music-btn').addEventListener('click', toggleBgm);
-    document.getElementById('scene-toggle-btn').addEventListener('click', () => {
-      switchScene(currentScene === 'indoor' ? 'outdoor' : 'indoor');
-    });
-
-    // --- 9. 온보딩 / 프로필 설정 모달 로직 ---
-    const profileModal = document.getElementById('profile-modal');
-    const inputName = document.getElementById('input-name');
-    const saveProfileBtn = document.getElementById('save-profile-btn');
-    const cancelProfileBtn = document.getElementById('cancel-profile-btn');
-    const profileEditBtn = document.getElementById('profile-edit-btn');
-    const btnMale = document.getElementById('gender-male');
-    const btnFemale = document.getElementById('gender-female');
-    let selectedGender = 'male';
-
-    function setGenderSelect(g) {
-      selectedGender = g;
-      if (g === 'male') {
-        btnMale.classList.add('border-amber-500', 'bg-amber-500/20');
-        btnFemale.classList.remove('border-amber-500', 'bg-amber-500/20');
-      } else {
-        btnFemale.classList.add('border-amber-500', 'bg-amber-500/20');
-        btnMale.classList.remove('border-amber-500', 'bg-amber-500/20');
-      }
-      document.getElementById('preview-avatar-icon').textContent = g === 'male' ? '👦' : '👧';
+    function setTimeMood(moodIndex) {
+      currentMood = moodIndex % moods.length;
+      timeMoodIcon.className = `fa-solid ${moods[currentMood].icon}`;
+      timeMoodText.textContent = moods[currentMood].name;
     }
 
-    btnMale.addEventListener('click', () => setGenderSelect('male'));
-    btnFemale.addEventListener('click', () => setGenderSelect('female'));
+    timeMoodBtn.addEventListener('click', () => setTimeMood(currentMood + 1));
+    helpBtn.addEventListener('click', () => openModal('modalHelp'));
 
-    profileEditBtn.addEventListener('click', () => {
-      inputName.value = userProfile.name;
-      setGenderSelect(userProfile.gender);
-      cancelProfileBtn.classList.remove('hidden');
-      profileModal.classList.remove('hidden');
-    });
+    // ================= WEB AUDIO LO-FI SYNTHESIZER =================
+    let audioCtx = null;
+    let isPlayingMusic = false;
+    let musicInterval = null;
 
-    cancelProfileBtn.addEventListener('click', () => {
-      profileModal.classList.add('hidden');
-    });
+    function initAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
 
-    saveProfileBtn.addEventListener('click', () => {
-      const val = inputName.value.trim();
-      if (!val) {
-        alert('이름을 한 글자 이상 입력해주세요!');
-        return;
-      }
-      userProfile.name = val;
-      userProfile.gender = selectedGender;
-      userProfile.isNew = false;
-      saveProfile();
-      profileModal.classList.add('hidden');
-      showToast(`환영합니다, ${userProfile.name}님! 즐거운 시간 보내세요.`);
-    });
+    function playWarmChord(freqs, duration = 3) {
+      if (!audioCtx || audioCtx.state !== 'running') return;
+      freqs.forEach(freq => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        const filter = audioCtx.createBiquadFilter();
 
-    // --- 10. 공지 게시판 (역순 5개 패치노트) ---
-    const boardModal = document.getElementById('board-modal');
-    const closeBoardBtn = document.getElementById('close-board-btn');
-    const tabUpdates = document.getElementById('tab-updates');
-    const tabEvents = document.getElementById('tab-events');
-    const tabNews = document.getElementById('tab-news');
-    const tabContent = document.getElementById('tab-content');
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
 
-    const patchNotes = [
-      { ver: 'v1.6 (최신)', date: '2026-11-03', title: '캐릭터 커스텀 & 로컬 저장 지원', desc: '접속 시 닉네임과 남/여 아바타를 선택할 수 있으며, 새로고침해도 프로필이 보존됩니다.' },
-      { ver: 'v1.5', date: '2026-11-03', title: '야외 마을 광장 맵 & 출입문 오픈', desc: '실내에서 문을 밟고 광장으로 나갈 수 있으며, 분수대와 정원 화단이 추가되었습니다.' },
-      { ver: 'v1.4', date: '2026-11-03', title: '마을 공지 게시판 설치', desc: '광장 소식 및 탭별 업데이트 내역 확인 시스템이 구현되었습니다.' },
-      { ver: 'v1.3', date: '2026-11-03', title: '실시간 이동 물리 & 충돌 판정 개선', desc: '아바타가 가구에 끼이지 않고 클릭한 곳으로 부드럽게 미끄러지듯 이동합니다.' },
-      { ver: 'v1.2', date: '2026-11-03', title: '가구 인터랙션 & 칠 신스 BGM 추가', desc: '작업 모니터, 드립 커피 연기 파티클, 턴테이블 Web Audio 로파이 신스가 탑재되었습니다.' }
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(450, audioCtx.currentTime);
+
+        gain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.04, audioCtx.currentTime + 0.3);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      });
+    }
+
+    const chords = [
+      [261.63, 329.63, 392.00, 493.88],
+      [220.00, 261.63, 329.63, 392.00],
+      [293.66, 349.23, 440.00, 523.25],
+      [196.00, 293.66, 392.00, 440.00]
     ];
+    let chordStep = 0;
 
-    function renderBoardUpdates() {
-      tabContent.innerHTML = patchNotes.map(item => `
-        <div class="p-3.5 rounded-xl bg-stone-800 border border-stone-700/80">
-          <div class="flex items-center justify-between mb-1">
-            <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">${item.ver}</span>
-            <span class="text-[11px] text-stone-500">${item.date}</span>
-          </div>
-          <h4 class="font-bold text-stone-100 text-sm mt-1">${item.title}</h4>
-          <p class="text-xs text-stone-400 mt-1 leading-relaxed">${item.desc}</p>
-        </div>
-      `).join('');
+    function toggleMusic() {
+      initAudio();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      isPlayingMusic = !isPlayingMusic;
+
+      if (isPlayingMusic) {
+        musicIcon.className = 'fa-solid fa-volume-high text-emerald-400';
+        const modalText = document.getElementById('modalMusicText');
+        if (modalText) modalText.textContent = '음악 일시 정지';
+        playWarmChord(chords[chordStep]);
+        musicInterval = setInterval(() => {
+          chordStep = (chordStep + 1) % chords.length;
+          playWarmChord(chords[chordStep]);
+        }, 3200);
+      } else {
+        musicIcon.className = 'fa-solid fa-volume-xmark';
+        const modalText = document.getElementById('modalMusicText');
+        if (modalText) modalText.textContent = '음악 재생하기';
+        if (musicInterval) clearInterval(musicInterval);
+      }
     }
 
-    function openBoardModal() {
-      renderBoardUpdates();
-      boardModal.classList.remove('hidden');
-    }
+    musicToggleBtn.addEventListener('click', toggleMusic);
 
-    closeBoardBtn.addEventListener('click', () => boardModal.classList.add('hidden'));
+    // ================= INITIALIZATION =================
+    window.addEventListener('load', () => {
+      resizeCanvas();
+      const hasProfile = loadUserProfile();
+      updateShortcutsUI();
+      animate();
 
-    tabUpdates.addEventListener('click', () => {
-      tabUpdates.className = 'px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-600 text-white transition';
-      tabEvents.className = 'px-3 py-1.5 rounded-lg text-xs font-medium bg-stone-800 text-stone-400 hover:text-stone-200 transition';
-      tabNews.className = 'px-3 py-1.5 rounded-lg text-xs font-medium bg-stone-800 text-stone-400 hover:text-stone-200 transition';
-      renderBoardUpdates();
-    });
-
-    tabEvents.addEventListener('click', () => {
-      tabEvents.className = 'px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-600 text-white transition';
-      tabUpdates.className = 'px-3 py-1.5 rounded-lg text-xs font-medium bg-stone-800 text-stone-400 hover:text-stone-200 transition';
-      tabNews.className = 'px-3 py-1.5 rounded-lg text-xs font-medium bg-stone-800 text-stone-400 hover:text-stone-200 transition';
-      tabContent.innerHTML = `
-        <div class="p-6 text-center text-stone-400">
-          <span class="text-3xl block mb-2">🎁</span>
-          <p class="text-sm font-semibold text-stone-300">진행 중인 이벤트가 없습니다.</p>
-          <p class="text-xs text-stone-500 mt-1">새로운 축제 소식이 등록되면 알려드릴게요!</p>
-        </div>
-      `;
-    });
-
-    tabNews.addEventListener('click', () => {
-      tabNews.className = 'px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-600 text-white transition';
-      tabUpdates.className = 'px-3 py-1.5 rounded-lg text-xs font-medium bg-stone-800 text-stone-400 hover:text-stone-200 transition';
-      tabEvents.className = 'px-3 py-1.5 rounded-lg text-xs font-medium bg-stone-800 text-stone-400 hover:text-stone-200 transition';
-      tabContent.innerHTML = `
-        <div class="p-6 text-center text-stone-400">
-          <span class="text-3xl block mb-2">📰</span>
-          <p class="text-sm font-semibold text-stone-300">오늘의 마을 뉴스</p>
-          <p class="text-xs text-stone-500 mt-1">오늘 날씨는 맑음! 광장 분수대에서 동전을 던져보세요.</p>
-        </div>
-      `;
-    });
-
-    // --- 초기 실행 ---
-    loadProfile();
-    updateUIHeader();
-
-    if (userProfile.isNew) {
-      setGenderSelect('male');
-      profileModal.classList.remove('hidden');
-    }
-
-    requestAnimationFrame(() => {
-      update();
-      draw();
+      // If user visits for the first time, open the onboarding modal automatically
+      if (!hasProfile) {
+        openProfileModal(true);
+      }
     });
   </script>
 </body>
