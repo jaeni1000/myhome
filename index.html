@@ -1013,7 +1013,9 @@
       const left = keys['keya'] || keys['a'] || keys['ㅁ'] || keys['arrowleft'];
       const right = keys['keyd'] || keys['d'] || keys['ㅇ'] || keys['arrowright'];
 
-      if (up || down || left || right) {
+      const isKeyboardMoving = up || down || left || right;
+
+      if (isKeyboardMoving) {
         if (up) dy -= 1;
         if (down) dy += 1;
         if (left) dx -= 1;
@@ -1024,6 +1026,7 @@
           dx = (dx / len) * player.speed;
           dy = (dy / len) * player.speed;
         }
+        // 키보드 조작 중에는 마우스 타겟을 현재 캐릭터 위치와 실시간 동기화
         player.targetX = player.x;
         player.targetY = player.y;
       } else {
@@ -1031,17 +1034,30 @@
         const distY = player.targetY - player.y;
         const distance = Math.hypot(distX, distY);
 
-        if (distance > 4) {
+        // 마우스 도착 오차 판정 범위를 2px로 축소하고 미세 잔여 벡터 차단
+        if (distance > 2) {
           dx = (distX / distance) * Math.min(player.speed, distance);
           dy = (distY / distance) * Math.min(player.speed, distance);
         } else {
+          dx = 0;
+          dy = 0;
           player.x = player.targetX;
           player.y = player.targetY;
         }
       }
 
       let actuallyMoved = false;
-      if (dx !== 0 || dy !== 0) {
+
+      // 0.1 미만의 미세 부동소수점 오차는 이동으로 치지 않음
+      if (Math.hypot(dx, dy) > 0.1) {
+        // 1. 실제로 확실히 전진 중일 때만 해당 방향으로 시선 고정
+        if (Math.abs(dx) > Math.abs(dy)) {
+          player.direction = dx > 0 ? 'right' : 'left';
+        } else {
+          player.direction = dy > 0 ? 'down' : 'up';
+        }
+
+        // 2. 충돌 검사 및 슬라이딩 이동
         if (!checkCollision(player.x + dx, player.y + dy, player.radius)) {
           player.x += dx;
           player.y += dy;
@@ -1061,11 +1077,6 @@
       if (actuallyMoved) {
         player.moving = true;
         player.stepCycle += 0.22;
-        if (Math.abs(dx) > Math.abs(dy)) {
-          player.direction = dx > 0 ? 'right' : 'left';
-        } else {
-          player.direction = dy > 0 ? 'down' : 'up';
-        }
 
         if (Math.random() < 0.2) {
           particles.push({
@@ -1078,8 +1089,11 @@
           });
         }
       } else {
+        // 이동이 멈추면 직전 player.direction을 그대로 보존하고 절대 건드리지 않음
         player.moving = false;
         player.stepCycle = 0;
+        player.targetX = player.x;
+        player.targetY = player.y;
       }
 
       // Check proximity to interactive objects
